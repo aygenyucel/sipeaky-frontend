@@ -1,4 +1,4 @@
-Backend repository link: https://github.com/aygenyucel/capstone-project-be
+Backend repository link: https://github.com/aygenyucel/sipeaky-backend
 
 # Getting Started with Create React App
 
