@@ -1,17 +1,17 @@
 import { Button, Container, Form } from "react-bootstrap"
 import "./signupPage.css"
 import { useState } from 'react';
-import { signupAndGetTokenAction } from './../../redux/actions/index';
+import { joinAsGuestAction, signupAndGetTokenAction } from './../../redux/actions/index';
 import { useNavigate } from 'react-router-dom';
-
-
+import { useDispatch } from "react-redux";
 
 const LoginPage = (props) => {
     const [email, setEmail] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -24,15 +24,24 @@ const LoginPage = (props) => {
             username: username,
             password: password
         }
-        // console.log("new registered user => ", newUser)
 
         signupAndGetTokenAction(newUser)
-        .then((dispatchObj) => 
+        .then(() => 
              navigate("/login")
             )
         .catch((error) =>
             console.log(error))
     } 
+
+    const handleGuestJoin = async () => {
+        try {
+            const action = await joinAsGuestAction();
+            dispatch(action);
+            navigate("/home");
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     return <div className="signup-page">
                 <Container>
@@ -58,6 +67,17 @@ const LoginPage = (props) => {
                                 Sign up
                             </Button>
                             <div className="d-flex justify-content-end mt-3">Already a user?<a href="/login" className="ms-2 signup-label-login"> LOGIN</a></div>
+                            </div>
+
+                            <div className="text-center mt-4">
+                                <div className="d-flex align-items-center mb-3">
+                                    <hr className="flex-grow-1" />
+                                    <span className="mx-2 text-muted">or</span>
+                                    <hr className="flex-grow-1" />
+                                </div>
+                                <button className="btn btn-outline-dark w-100" onClick={() => handleGuestJoin()}>
+                                    Join as guest
+                                </button>
                             </div>
                         </Form>
                     </div>

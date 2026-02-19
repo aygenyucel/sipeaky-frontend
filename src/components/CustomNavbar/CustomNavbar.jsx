@@ -2,11 +2,10 @@ import "./customNavbar.css"
 import Container from 'react-bootstrap/Container';
 import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from "react";
-import { getAllRoomsAction } from "../../redux/actions";
-import { isLoggedInAction } from './../../redux/actions/index';
+import { getAllRoomsAction, logoutAction } from "../../redux/actions";
+import { isUserAlreadyLoggedInAction } from './../../redux/actions/index';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button } from 'react-bootstrap';
 import { GiHamburgerMenu } from "react-icons/gi";
 
 const CustomNavbar = () => {
@@ -19,6 +18,19 @@ const CustomNavbar = () => {
   const [isActive, setIsActive] = useState(true)
   const user = useSelector(state => state.profileReducer.data)
 
+
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(prev => !prev)
+  }
+
+  const logoutUser = () => {
+    localStorage.removeItem("JWTToken");
+    dispatch(logoutAction());
+    navigate("/", { replace: true });
+  }
+
   useEffect(()=> {
     setPathname(location.pathname)
   }, [location])
@@ -29,7 +41,7 @@ const CustomNavbar = () => {
     getAllRoomsAction()
     .then((action) => dispatch(action))
     // console.log("user", user, "jwt: ", JWTToken)
-    isLoggedInAction(user, JWTToken, dispatch)
+    isUserAlreadyLoggedInAction(user, JWTToken, dispatch)
     .then((boolean) => {
         if(boolean === true) {
             setIsLoggedIn(true)
@@ -69,7 +81,7 @@ const CustomNavbar = () => {
                     </div>
                     <div className="navbar-item d-flex justify-content-center">
                       <div className={location.pathname=== "/rooms" && "active"}></div>
-                      <a href="/rooms"> <div >Chat rooms</div></a>
+                      <a href="/rooms"> <div >Study Halls</div></a>
                     </div>
                     <div className="navbar-item d-flex justify-content-center">
                       <div className={location.pathname=== "#" && "active"}></div>
@@ -82,15 +94,22 @@ const CustomNavbar = () => {
                   
                   </div>
                 <div className="d-flex">
-                {isLoggedIn
-                  ? 
-                  <a href="#">
-                    <div className="navbar-right user-info d-flex justify-content-center align-items-center">
-                      <div className="d-flex justify-content-center align-items-center">{user.username}</div>
-                      <div className="user-avatar ms-3 d-flex justify-content-center align-items-center"><img src="/assets/avatar-default.png" alt="avatar-default" /></div>
-                      
-                    </div>
-                  </a>
+                {isLoggedIn ? (
+                    <>
+                      <div className="navbar-right user-info d-flex justify-content-center align-items-center">
+                        <div className="d-flex justify-content-center align-items-center">{user.username}</div>
+                        <div onClick={toggleUserMenu} style={{ cursor: "pointer" }} className="user-avatar ms-3 d-flex justify-content-center align-items-center">
+                          <img src="/assets/avatar-default.png" alt="avatar-default" />
+                          {isUserMenuOpen && (
+                            <div className="user-dropdown">
+                              <div className="user-dropdown-item"  onClick={() => logoutUser()}>
+                                Sign out
+                              </div>
+                            </div>
+                          )}
+                          </div>
+                      </div>
+                    </>)
                   : 
                   <a href="/login">
                     <div className="navbar-right d-flex justify-content-center align-items-center">

@@ -12,14 +12,14 @@ export const UPDATE_ROOM_USERS = 'UPDATE_ROOM_USERS';
 export const ADD_MESSAGE_TO_CHAT = 'ADD_MESSAGE_TO_CHAT';
 export const UPDATE_CHAT ='UPDATE_CHAT';
 export const ADD_ONLINE_USER = 'ADD_ONLINE_USER';
-export const REMOVE_ONLINE_USER = 'REMOVE_ONLINE_USER'
-export const RESET_ONLINE_USERS = 'RESET_ONLINE_USERS'
-export const GET_IS_KICKED = 'GET_IS_KICKED'
+export const REMOVE_ONLINE_USER = 'REMOVE_ONLINE_USER';
+export const RESET_ONLINE_USERS = 'RESET_ONLINE_USERS';
+export const GET_IS_KICKED = 'GET_IS_KICKED';
+export const RESET_PROFILE = 'RESET_PROFILE';
 
-const BE_DEV_URL = process.env.REACT_APP_BE_DEV_URL
+const BE_DEV_URL = process.env.REACT_APP_BE_DEV_URL;
 
 export const getIsKickedAction = (isKicked) => {
-    // console.log("getIsKickedAction triggered => iskicked payload:", isKicked)
     return {
         type: GET_IS_KICKED,
         payload: isKicked
@@ -27,7 +27,6 @@ export const getIsKickedAction = (isKicked) => {
 }
 
 export const addPeerAction = (peerID, stream, userID, roomEndpoint) => {
-    // console.log("addPeerAction triggered => added PeerID: ", peerID, "userID =>", userID, "roomEndpoint =>", roomEndpoint)
     addOnlineUsersAction(userID)
     return {
         type:ADD_PEER,
@@ -36,7 +35,6 @@ export const addPeerAction = (peerID, stream, userID, roomEndpoint) => {
 }
 
 export const removePeerAction = (peerID, userID) => {
-    // console.log("removePeerAction triggered => removed peerID: ", peerID);
     removeOnlineUsersAction(userID)
     return {
         type:REMOVE_PEER,
@@ -45,7 +43,6 @@ export const removePeerAction = (peerID, userID) => {
 }
 
 export const addMessageToChatAction = (newMessage) => {
-    // console.log("addMessageToChatAction triggered => new message:", newMessage);
     return {
         type: ADD_MESSAGE_TO_CHAT,
         payload: {newMessage}
@@ -53,7 +50,6 @@ export const addMessageToChatAction = (newMessage) => {
 }
 
 export const updateChatAction = (chat) => {
-    // console.log("addMessageToChatAction triggered => chat:", chat);
     return {
         type: UPDATE_CHAT,
         payload: {chat}
@@ -62,51 +58,28 @@ export const updateChatAction = (chat) => {
 
 export const updateRoomChatAction = (roomID, newMessage, chat) => {
     return new Promise(async (resolve, reject) => {
-        // const options = {
-        //     method: "POST",
-        //     body: JSON.stringify(newMessage),
-        //     headers: {
-        //         "Content-Type": "application/json"
-        //     }
-        // }
-        // try {
-        //     const response = await fetch(`${BE_DEV_URL}/roomChats`, options);
+        try {
+            const response= await fetch(`${BE_DEV_URL}/rooms/${roomID}`, 
+            {method: "PUT", 
+            body: JSON.stringify({chat: chat}), 
+            headers: {
+                        "Content-Type": "application/json"
+                    }})
+            if(response.ok) {
+                const roomData = await response.json();
+                // console.log("######", roomData);
 
-        //     if(response.ok) {
-        //         const roomChatData = await response.json();
-        //         const roomChatId = roomChatData._id
-
-                try {
-                    const response= await fetch(`${BE_DEV_URL}/rooms/${roomID}`, 
-                    {method: "PUT", 
-                    body: JSON.stringify({chat: chat}), 
-                    headers: {
-                                "Content-Type": "application/json"
-                            }})
-                    if(response.ok) {
-                        const roomData = await response.json();
-                        // console.log("######", roomData);
-
-                        resolve(roomData)
-                    } else {
-                        console.log("sorryyy, there is a problem when fetching!")
-                    }
-                } catch (error) {
-                    reject(error)
-                }
-        //     }
-        //     else {
-        //         console.log("sorryyy, there is a problem when fetching!")
-        //     }
-            
-        // } catch (error) {
-        //     reject(error)
-        // }
+                resolve(roomData)
+            } else {
+                console.log("sorryyy, there is a problem when fetching!")
+            }
+        } catch (error) {
+            reject(error)
+        }
     })
 }
 
 export const updatePeerStreamsAction = (peers) => {
-    // console.log("update peer string triggerssssssssssssss")
     return {
         type: UPDATE_PEER_STREAMS,
         payload: {peers}
@@ -114,28 +87,23 @@ export const updatePeerStreamsAction = (peers) => {
 }
 
 export const resetPeersStateAction = () => {
-    // console.log("resetStateAction triggered!")
     return {
         type: RESET_PEERS_STATE
     }
 }
 export const resetRoomsStateAction = () => {
-    // console.log("resetRoomStateAction triggered!")
     return {
         type: RESET_ROOMS_STATE
     }
 }
 
 export const resetOnlineUsersAction = () => {
-    // console.log("resetOnlineUsers action triggered!")
     return {
         type: RESET_ONLINE_USERS
     }
 }
 export const signupAndGetTokenAction = (newUser) => {
     return new Promise(async (resolve, reject) => {
-
-        // console.log("signupAndGetTokenAction Triggered!")
         const options = {
             method: "POST",
             body: JSON.stringify(newUser),
@@ -147,8 +115,6 @@ export const signupAndGetTokenAction = (newUser) => {
                 const response = await fetch(`${BE_DEV_URL}/users/signup`, options);
                 if(response.ok) {
                     const data= await response.json()
-                    const {JWTToken} = data
-                    // console.log("JWTToken => ", JWTToken)
                     resolve({})
                 } else {
                     response.text()
@@ -165,131 +131,80 @@ export const signupAndGetTokenAction = (newUser) => {
     })
 }
 
-export const loginAndGetTokenAction = (user) => {
-   return new Promise( async (resolve, reject) => {
-        // console.log("loginAndGetTokenAction triggered!")
-        const options = {
-            method: "POST",
-            body: JSON.stringify(user),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        }
-        
-            try {
-                const response = await fetch(`${BE_DEV_URL}/users/login`, options)
+export const logoutAction = () => {
+    return {
+      type: RESET_PROFILE
+    }
+  }
 
-                if(response.ok) {
-                    const data = await response.json();
-                    const {JWTToken} = data;
-                    if(JWTToken) {
-                        const options = {
-                            method: "GET",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Authorization:  "Bearer "+ JWTToken
-                            }
-                        }
-                        try {
-                            const response = await fetch(`${BE_DEV_URL}/users/me`, options);
-                            if(response.ok){
-                                const user = await response.json()
-                                if(user) {
-                                    localStorage.setItem("JWTToken", JWTToken)
-                                    
-                                    const dispatchAction1 = {
-                                        type: GET_PROFILE,
-                                        payload: user
-                                    }
-                                        
-                                    const dispatchAction2 = {
-                                        type: GET_PROFILE_ID,
-                                        payload: user._id
-                                    }
-
-                                    resolve({dispatchAction1, dispatchAction2})
-                                }
-                            } 
-                        } catch (error) {
-                            console.log(error);
-                        }
-                    }
-
-                    resolve({})
-                } else{
-                    response.text()
-                        .then(text => {
-                            throw new Error(text)
-                        })
-                        console.log("Ops, something went wrong", )
-                }
-                
-            } catch (error) {
-                console.log(error)
-                reject(error)
-            }
-        
-    }) 
-}
-
-//checking if we have jwt token and user 
-//(if we have jwt but not user data, try to fetch user with that jwt)
-//returns a boolean
-export const isLoggedInAction =  (userState, JWTToken, dispatch) => {
-    return new Promise (async (resolve, reject) => {
-        
-        if(JWTToken) {
-            //if we have JWT token, need to check user
-            if(userState){
-                //if we have user, return true
-                resolve(true)
-            } else {
-                //if we have not user, try to fetch with JWT token
-                const options = {
-                    method: "GET",
-                    headers:{
-                        "Content-Type": "application/json",
-                        Authorization: "Bearer " + JWTToken
-                    }
-                }
-                try {
-                       
-                        // console.log("we have jwt but not user redux, fetching /users/me with jwt and saving user if ok")
-                        const response = await fetch(`${BE_DEV_URL}/users/me`, options);
-                        
-                        if(response.ok) {
-                            
-                            const data = await response.json();
-                            dispatch({
-                                type: GET_PROFILE,
-                                payload: data
-                            })
-                            dispatch({
-                                type: GET_PROFILE_ID,
-                                payload: data._id
-                            })  
-                            resolve(true)
-                        } 
-                        else{
-                            resolve(false)
-                        }
-    
-                    } catch (error) {
-                        console.log(error)
-                        reject(error)
-                    }
-                
-            }
-
-        } else {
-            //if we dont have JWT token, return false
-            resolve(false);
+export const loginAndGetTokenAction = async (user) => {
+    const loginResponse = await fetch(`${BE_DEV_URL}/users/login`, {
+        method: "POST",
+        body: JSON.stringify(user),
+        headers: {
+            "Content-Type": "application/json"
         }
     })
+    if(!loginResponse.ok){
+        const errorData = await loginResponse.json();
+        throw new Error(errorData.message || "Invalid email or password");
+    }
+    
+    const { JWTToken } = await loginResponse.json();
+
+    if (!JWTToken) {
+        throw new Error("Token not received");
+    }
+    localStorage.setItem("JWTToken", JWTToken);
+
+    const profileResponse = await fetch(`${BE_DEV_URL}/users/me`, {
+        method: "GET",
+        headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${JWTToken}`
+        }
+    });
+
+    if (!profileResponse.ok) {
+        throw new Error("Failed to fetch user profile");
+    }
+    const profile = await profileResponse.json()
+    const setUserProfileAction = {
+        type: GET_PROFILE,
+        payload: profile
+    }
+            
+    const setUserProfileIDAction = {
+        type: GET_PROFILE_ID,
+        payload: profile._id
+    }
+    return({setUserProfileAction, setUserProfileIDAction});
+}
+
+export const isUserAlreadyLoggedInAction =  async (userState, JWTToken, dispatch) => {
+    try {
+        if (!JWTToken) return false;
+        if (userState) return true;
+        const response = await fetch(`${BE_DEV_URL}/users/me`, {
+            method: "GET",
+            headers:{
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + JWTToken
+            }
+        });
+        if (!response.ok) return false;
+        
+        const data = await response.json();
+        dispatch({type: GET_PROFILE, payload: data})
+        dispatch({type: GET_PROFILE_ID, payload: data._id})  
+        return true;
+        
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 export const addNewRoomAction = (newRoomData) => {
-    // console.log("addNewRoomAction triggered", newRoomData);
     return {
         type: ADD_NEW_ROOM,
         payload: newRoomData
@@ -297,7 +212,6 @@ export const addNewRoomAction = (newRoomData) => {
 }
 
 export const deleteRoomAction = (deletedRoomID) => {
-    // console.log("deleteRoomActionTriggered");
     return {
         type: DELETE_ROOM,
         payload: deletedRoomID
@@ -306,7 +220,6 @@ export const deleteRoomAction = (deletedRoomID) => {
 
 export const getAllRoomsAction = () => {
     return new Promise(async (resolve, reject) => {
-        
             const options = {
                 method: "GET",
                 headers:{
@@ -333,10 +246,7 @@ export const getAllRoomsAction = () => {
 }
 
 export const updateRoomUsersAction = (users, roomID, userID) => {
-    // console.log("updateRoomUsersAction triggered!! users =>", users, "roomID =>", roomID)
     return new Promise (async (resolve, reject) => {
-        //first we'll update the users of room on database
-        //then we'll resolve the action to update reducer
         const options = {
             method: "PUT",
             body: JSON.stringify({users: users}),
@@ -349,7 +259,6 @@ export const updateRoomUsersAction = (users, roomID, userID) => {
             
             if(response.ok) {
                 const updatedRoom = await response.json()
-                // console.log("updateRoomUsersAction triggered!! fetch the PUT endpoint response json =>", updatedRoom)
                 const action = {
                     type: UPDATE_ROOM_USERS,
                     payload: {users, roomID, userID}
@@ -369,7 +278,6 @@ export const updateRoomUsersAction = (users, roomID, userID) => {
 
 //adding online users in the all chat rooms
 export const addOnlineUsersAction = (userID) => {
-    // console.log("addOnlineUsersAction triggered => userID :", userID)
     return {
         type: ADD_ONLINE_USER,
         payload: {userID}
@@ -378,10 +286,34 @@ export const addOnlineUsersAction = (userID) => {
 
 //removing online users in the all chat rooms
 export const removeOnlineUsersAction = (userID) => {
-    // console.log("removeOnlineUsersAction triggered => userID :", userID)
 
     return {
         type: REMOVE_ONLINE_USER,
         payload: {userID}
     }
+}
+
+export const joinAsGuestAction = async () => {
+    const res = await fetch(`${BE_DEV_URL}/users/guest`, { method: "POST" });
+    const { JWTToken } = await res.json();
+
+    localStorage.setItem("JWTToken", JWTToken);
+    if (!JWTToken) {
+        throw new Error("Token not received");
+    }
+
+    const profileResponse = await fetch(`${BE_DEV_URL}/users/me`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JWTToken}`
+        }
+    });
+
+    if (!profileResponse.ok) {
+        throw new Error("Failed to fetch user profile");
+    }
+    const profile = await profileResponse.json()
+
+    return({ type: GET_PROFILE, payload: profile });
 }

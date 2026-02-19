@@ -1,4 +1,4 @@
-import { GET_PROFILE, GET_PROFILE_ID, GET_IS_KICKED } from "../actions"
+import { GET_PROFILE, GET_PROFILE_ID, GET_IS_KICKED, RESET_PROFILE } from "../actions"
 
 
 const initialState = {
@@ -10,7 +10,6 @@ const initialState = {
 const profileReducer = (state = initialState, action) => {
     switch (action.type) {
         case GET_PROFILE:
-            console.log("qqqqqqqqqqqqqqqqqq", action.payload)
             return {
                 ...state,
                 data: action.payload
@@ -25,6 +24,8 @@ const profileReducer = (state = initialState, action) => {
                 ...state,
                 isKicked: action.payload
             }
+        case RESET_PROFILE:
+            return initialState;
         default: 
             return state
     }

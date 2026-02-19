@@ -38,10 +38,16 @@
     border-radius: 5px;
 }
 
+.user-avatar {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
 .user-avatar img{
     height: 30px;
     border-radius: 50px;
 }
+
 
 a {
     text-decoration: none;
@@ -80,7 +86,7 @@ a:hover {
     position: absolute;
     background-color: var(--color-main);
     top:35px;
-    right: 0;
+    right: 20px;
     padding-inline: 15px;
     padding-block: 10px;
     width: 180px;
@@ -93,6 +99,20 @@ a:hover {
 
 .navbar-toggle .navbar-item {
     margin-block: 15px;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: var(--color-main);
+    width: 180px;
+    padding: 10px 15px;
+    border: 1px solid black;
+    border-top: none;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    z-index: 999;
 }
 
 @media (max-width: 770px) {

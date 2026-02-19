@@ -3,7 +3,6 @@
     background-color: var(--color-main);
     padding: 40px;
     border-radius: 10px;
-    
 }
 
 .login-page-header {
@@ -29,4 +28,14 @@
 
 .login-btn:hover {
     background-color: black;
+}
+
+.login-page{
+    position: relative;
+}
+
+.login-error {
+  color: #b00020;
+  font-size: 0.85rem;
+  margin-top: 10px;
 }
