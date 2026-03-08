@@ -54,6 +54,11 @@
     margin-top: 200px;
 }
 
+.rooms-pages {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 @media (max-width: 867px) {
     .rooms-pages {

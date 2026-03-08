@@ -1,22 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import "./roomsPage.css";
 import { useDispatch } from 'react-redux';
-import { getAllRoomsAction, getIsKickedAction, isLoggedInAction} from "../../redux/actions/index.js";
+import { isUserAlreadyLoggedInAction} from "../../redux/actions/index.js";
 import { useEffect, useState } from "react";
-import { resolvePath, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import CreateCustomRoom from '../../components/CreateCustomRoom/CreateCustomRoom';
 import RoomPreview from "../../components/RoomPreview/RoomPreview.jsx";
 import SearchRoom from '../../components/SearchRoom/SearchRoom.jsx';
-import { Container } from "react-bootstrap";
 import CustomNavbar from "../../components/CustomNavbar/CustomNavbar";
-import { Button } from 'react-bootstrap';
-import { useInfiniteScroll } from "infinite-scroll-hook";
-import {GrFormNext, GrFormPrevious} from "react-icons/gr"
 import { Modal } from 'react-bootstrap';
 import { Circles } from "react-loader-spinner";
-
-
 
 const RoomsPage = () => {
     const dispatch = useDispatch();
@@ -26,12 +20,9 @@ const RoomsPage = () => {
     
     const user = useSelector(state => state.profileReducer.data)
     const rooms = useSelector(state => state.roomsReducer.rooms)
-    const users = useSelector(state => state.peersReducer.users)
-    const isKicked = useSelector(state => state.profileReducer.isKicked)
-
     
     const [skip, setSkip] = useState(0)
-    const [limit, setLimit] = useState(4)
+    const limit = 4;
     const [pageNumber, setPageNumber] = useState(0)
     const [roomsPaginated, setRoomsPaginated] = useState([])
 
@@ -45,18 +36,21 @@ const RoomsPage = () => {
         }
     }
     useEffect(() => {
-        // dispatch(resetPeersStateAction());
-        // dispatch(resetRoomsStateAction());
-        
-        getAllRoomsAction()
-        .then((action) => dispatch(action))
+        const loadRooms = async () => {
+            setIsRoomsLoading(true);
+            const skip = pageNumber * limit;
+            await getRoomsWithPagination(skip, limit);
+            setIsRoomsLoading(false);
+        };
 
-        isLoggedInAction(user, JWTToken, dispatch)
+        loadRooms();
+    }, [pageNumber, limit]);
+
+    useEffect(() => {
+        isUserAlreadyLoggedInAction(user, JWTToken, dispatch)
         .then((boolean) => {
             if(boolean === true) {
                 setIsLoggedIn(true)
-                // console.log("yes its logged in")
-                // console.log("rooms:", rooms)
             } else {
                 navigate("/login")
             }
@@ -75,20 +69,9 @@ const RoomsPage = () => {
        
     }, [])
 
-    
-    useEffect(() => {
-        getAllRoomsAction()
-        .then((action) => {dispatch(action)
-        }).then(() => {getRoomsWithPagination(pageNumber*(skip+3),limit)}).then((data) => {setIsRoomsLoading(false)})
-    }, [rooms])
-
-    
-
     function getRoomsWithPagination (skip, limit) { return new Promise(async (resolve, reject) => {
-        
             try {
                 const response = await fetch(`${process.env.REACT_APP_BE_DEV_URL}/rooms?skip=${skip}&limit=${limit}`)
-                // console.log("xxxxxxxxx", skip, "xxxxxxxxx", limit)
                 if(response.ok) {
                     const data = await response.json();
                     setRoomsPaginated(data)
@@ -101,61 +84,18 @@ const RoomsPage = () => {
         
     }) }
     const [totalPages, setTotalPages] = useState(Math.ceil(rooms.length/limit))
-    const [startIndex, setStartIndex] = useState(0);
-    const [endIndex, setEndIndex] = useState(3);
-    const [currentPage, setCurrentPage] = useState(0);
-    const [isPageClicked, setIsPageClicked] = useState(false);
 
     const changePage = (e) => {
-        e.preventDefault()
-        setRoomsPaginated([])
-        setIsRoomsLoading(true)
-        const newPageNumber = e.currentTarget.getAttribute('value')
-        setCurrentPage(e.currentTarget.getAttribute('value'))
-        setPageNumber(newPageNumber)
-        const newSkip = newPageNumber*3
-        
-        getRoomsWithPagination(newSkip, limit).then((data) => {setRoomsPaginated(data)})
-        setStartIndex(startIndex)
-        setEndIndex(endIndex)
-    }
+        const newPage = Number(e.currentTarget.getAttribute("value"));
+        setPageNumber(newPage);
+    };
 
-    const prevClick = () => {
-        if(startIndex > 0){
-            setIsRoomsLoading(true)
-
-            setStartIndex(startIndex-1);
-            setEndIndex(endIndex-1)
-
-            const newPageNumber = Math.floor(currentPage)-1
-            setCurrentPage(newPageNumber)
-            setPageNumber(newPageNumber)
-            const newSkip = newPageNumber*3
-            getRoomsWithPagination(newSkip, limit)
-        }
-    }
-
-    const [totalPagesArray, setTotalPagesArray] = useState([...Array(totalPages).keys()].slice(startIndex, endIndex))
-
-    const nextClick = () => {
-        if(endIndex <= totalPages){
-            setIsRoomsLoading(true)
-
-            setStartIndex(startIndex+1);
-            setEndIndex(endIndex+1)
-
-            const newPageNumber = Math.floor(currentPage)+1
-            setCurrentPage(newPageNumber)
-            setPageNumber(newPageNumber)
-            const newSkip = newPageNumber*3
-            getRoomsWithPagination(newSkip, limit)
-        }
-    }
-
-    useEffect(() => {
-        setTotalPagesArray([...Array(totalPages).keys()].slice(startIndex, endIndex))
-        // console.log(totalPagesArray)
-    }, [startIndex, endIndex, pageNumber])
+    const PAGE_WINDOW = 3;
+    const totalPagesArray = (() => {
+    const start = Math.max(0, pageNumber - Math.floor(PAGE_WINDOW / 2));
+    const end = Math.min(totalPages, start + PAGE_WINDOW);
+        return [...Array(totalPages).keys()].slice(start, end);
+    })();
 
 
     return  isLoggedIn && 
@@ -218,12 +158,17 @@ const RoomsPage = () => {
                         </div>
                         </div>
                         
-                        <div className="rooms-pages d-flex justify-content-between align-items-center">
-                                {(startIndex > 0)? <div> <GrFormPrevious onClick={prevClick} className="prev-page-btn"/> </div>: <div> <GrFormPrevious className="prev-page-btn invisible"/> </div>}
-                                {totalPagesArray.map((i) => 
-                                    <div key = {i} onClick={changePage} value={i} className={`page-number ${Math.floor(currentPage) === i ? "page-number-active": "page-not-active"}`}>{i+1}</div>
-                                )}
-                                {(endIndex +1 <= totalPages ) ? <GrFormNext value={Math.floor(currentPage)+1} onClick={nextClick} className="next-page-btn"/>: <GrFormNext className="invisible"/>}
+                        <div className="rooms-pages">
+                            {totalPagesArray.map((i) => (
+                                <div
+                                key={i}
+                                onClick={changePage}
+                                value={i}
+                                className={`page-number ${pageNumber === i ? "page-number-active" : "page-not-active"}`}
+                                >
+                                {i + 1}
+                                </div>
+                            ))}
                         </div>
                 </div>
             </div>

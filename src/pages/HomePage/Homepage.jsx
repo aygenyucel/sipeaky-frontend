@@ -6,13 +6,19 @@ import CustomNavbar from './../../components/CustomNavbar/CustomNavbar';
 
 const Home = () => {
 
-    const [languages, setLanguages] = useState(["English",4000, "Chinese",4000, "Spanish",4000, "French", 4000,"Japanase",4000, "Italian",4000, "Korean",4000, "Russian",4000,"Arabic",4000, "Turkish",4000, "German",4000])
-    const [newLanguage, setNewLanguage] = useState("")
+    const [languages, setLanguages] = useState([
+        "English",4000,
+        "Spanish",4000,
+        "French",4000,
+        "German",4000,
+        "Italian",4000,
+        "Portuguese",4000,
+        "Turkish",4000
+    ]);
+    
     const [index, setIndex] = useState(0);
     
-    
     useEffect(() => {
-
         const timer = () => {
             const randomIndex = Math.floor(Math.random() * languages.length);
             setIndex(randomIndex)
@@ -33,15 +39,20 @@ const Home = () => {
                         <div className="main-container d-flex ">
                             
                             <div className="top-area col-6 d-flex flex-column justify-content-center main-left">
-                                <div className="d-flex flex-column main-header">
-                                    <div>Start speaking</div>
-                                    <Typical
-                                        steps={languages}
-                                        loop={Infinity}
-                                        wrapper="p"
-                                        className="main-header-language"
-                                        /> 
-                                    <div>now!</div>
+                                <div className="d-flex flex-column align-items-center">
+                                    <div className="d-flex flex-column align-items-center">
+                                        <div className="main-header">Find Your</div>
+                                        <Typical
+                                            steps={languages}
+                                            loop={Infinity}
+                                            wrapper="span"
+                                            className="main-header-language"
+                                        />
+                                        <div className="main-header">Study Space.</div>
+                                    </div>
+                                    <div className="subtitle">
+                                        Speak when you're ready.
+                                    </div>
                                 </div>
                                 
                             </div>
@@ -75,15 +86,12 @@ const Home = () => {
                                 <img className="home-img bottom-img" src="/assets/world.svg" alt="around-the-world" />
                             </div>
                             <div className="bottom-area col-6 d-flex flex-column justify-content-center  bottom-header">
-                                <div className="d-flex bottom-header-1 mb-3 ">
-                                No lessons, no waiting. 
-                                </div>
                                 <div className="d-flex  bottom-header-2">
-                                Find yourself a speaking opportunity
+                                    A simple place to study languages.
                                 </div>
 
                                 <div className="d-flex bottom-header-4 justify-content-end mb-3">
-                                at anytime, anywhere!
+                                    Anytime, anywhere.
                                 </div>
                             <div className="d-flex  bottom-header-2">
                                 <a href="/rooms">

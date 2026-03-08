@@ -12,19 +12,15 @@ const RoomPreview = (props) => {
     
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    
     const roomData = props.roomData;
     const user = useSelector(state => state.profileReducer.data)
-    
     const users = roomData.users;
     const [roomID, setRoomID] = useState(roomData._id)
     const [roomCapacity, setRoomCapacity] = useState(roomData.capacity);
     const [roomLanguage, setRoomLanguage] = useState(roomData.language);
     const [roomLevel, setRoomLevel] = useState(roomData.level);
-    const [roomCreatorID, setRoomCreatorID] = useState(roomData.creator);
+    const [roomCreatorID, setRoomCreatorID] = useState(roomData.creatorUserID);
     const [roomCreatorUsername, setRoomCreatorUsername] = useState("");
-    
-    const[usernames, setUsernames] = useState([]);
     
     
     //todo get username for the creator
@@ -37,22 +33,12 @@ const RoomPreview = (props) => {
             window.alert("Room is full!")
         }
         
-    }
+    } 
 
     useEffect(() => {
-        // console.log("roomData users", roomData)
-
-        getUsername(roomCreatorID).then((username) =>{setRoomCreatorUsername(username)})
-        
-        const usernamesTemp = []
-        for (let i =0; i < users.length; i++){
-            getUsername(users[i]).then((username) => usernamesTemp.push(username))
-
-        }
-        setUsernames(usernamesTemp)
-
-    }, [])
-    
+        if (!roomCreatorID) return;
+        getUsername(roomCreatorID).then((username) =>{ setRoomCreatorUsername(username)});
+    }, [roomCreatorID]);
 
     const deleteRoom = async(roomID) => {
         try {
@@ -120,14 +106,23 @@ const RoomPreview = (props) => {
                         <div>{roomLanguage}</div>
                         <div>{roomLevel}</div>
                     </div>
-                    
+
                 </div>
 
                 <div className="room-capacity d-flex">
-                    {Array(users?.length).fill(<GiPerson className={"room-person room-person-full" }/>)}
-                    {Array(roomCapacity-(users?.length)).fill(<GiPerson className={"room-person room-person-empty" }/>)}
-                    {/* <GiPerson className="room-person room-person-full"/>
-                    <GiPerson className="room-person room-person-available"/> */}
+                    {Array.from({ length: users?.length }).map((_, i) => (
+                    <GiPerson
+                        key={`full-${i}`}
+                        className="room-person room-person-full"
+                    />
+                    ))}
+
+                    {Array.from({ length: roomCapacity - users?.length }).map((_, i) => (
+                    <GiPerson
+                        key={`empty-${i}`}
+                        className="room-person room-person-empty"
+                    />
+                    ))}
                 </div>
                 <div onClick={joinTheRoom} className="room-join-div">
                     Join the room

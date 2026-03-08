@@ -22,7 +22,7 @@ import {GiHamburgerMenu} from 'react-icons/gi'
 
 import {VscUnmute} from 'react-icons/vsc'
 import { useSelector } from 'react-redux';
-import { isLoggedInAction } from './../../redux/actions/index';
+import { isUserAlreadyLoggedInAction } from './../../redux/actions/index';
 import { useNavigate } from 'react-router-dom';
 import {HiHome, HiVideoCamera, HiPlus} from 'react-icons/hi'
 import {FaUserFriends} from 'react-icons/fa'
@@ -87,7 +87,9 @@ const ChatRoom = (props) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [text, setText] = useState("");
 
-    const [isChatOpen, setIsChatOpen] = useState(false)
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [roomExists, setRoomExists] = useState(false);
+    const [roomChecked, setRoomChecked] = useState(false);
 
     const resetFormValue = () => setText("");
 
@@ -121,9 +123,6 @@ const ChatRoom = (props) => {
             setChatHistory([...chatHistory, newMessage])
         })
     }, [chatHistory])
-
-
-
 
     const getMediaDevices = (mediaConstraints) => {
         return navigator.mediaDevices.getUserMedia(mediaConstraints)
@@ -163,11 +162,35 @@ const ChatRoom = (props) => {
         })
     }
 
+    useEffect(() => {
+        const checkRoom = async () => {
+            try {
+            const res = await fetch(
+                `${process.env.REACT_APP_BE_DEV_URL}/rooms/endpoint/${roomEndpoint}`
+            );
+            const data = await res.json();
+            if (!data || data.length === 0) {
+                toast.error("Room not found");
+                navigate("/rooms", { replace: true });
+                return;
+            }
+                setRoomData(data[0]);
+                setRoomID(data[0]._id);
+                setRoomExists(true);
+            } catch (err) {
+                navigate("/rooms", { replace: true });
+            } finally {
+                setRoomChecked(true);
+            }
+        };
+
+            checkRoom();
+        }, [roomEndpoint]);
 
     useEffect(() => {
 
         //checking if user logged in
-        isLoggedInAction(userData, JWTToken, dispatch)
+        isUserAlreadyLoggedInAction(userData, JWTToken, dispatch)
         .then((boolean) => {
             if(boolean === true) {
                 setIsLoggedIn(true)
@@ -186,7 +209,7 @@ const ChatRoom = (props) => {
                     }
 
                     //getting the username of room creator
-                    getUserInfo(data[0].creator).then(userData => {
+                    getUserInfo(data[0].creatorUserID).then(userData => {
                         setRoomCreatorUsername(userData.username)
                     })
 
@@ -203,25 +226,14 @@ const ChatRoom = (props) => {
             }
         })
         .catch(err => console.log(err))
-        // console.log("users->", users)
-        // console.log("data========>", roomData)
-    },[])
-
-    // useEffect(() => {
-    //     console.log("------onlinechattttusers", onlineChatUsers)
-    // }, [onlineChatUsers])
-        
-        
-        // console.log("users->", users)
-        // console.log("data========>", roomData)
+    }, [])
 
     useEffect(() => {
         getRoomData(roomEndpoint).then(data => {setRoomData(data[0])})
     }, [chat])
 
     useEffect(()  => {
-        // console.log(" userData => ", userData)
-      
+        if (!roomID || !userID) return;
         const peer = new Peer({
             config: {'iceServers': [
                 { url: 'stun:stun.l.google.com:19302' },
@@ -235,7 +247,7 @@ const ChatRoom = (props) => {
             setMyPeerId(id)
             peerID = id;
 
-            socket.emit('join-room', { peerID: id, userID: userID, roomID, roomCapacity, roomEndpoint})
+            socket.emit('join-room', { peerID: id, userID: userID, roomCapacity, roomEndpoint})
 
         })
 
@@ -248,19 +260,9 @@ const ChatRoom = (props) => {
             stream.getVideoTracks()[0].enabled = false
             stream.getAudioTracks()[0].enabled = false
             // adding our peer
-            // console.log("peerID:", peerID, "userID:", userID,"roomEndpoint:", roomEndpoint)
             dispatch(addPeerAction(peerID, stream, userID, roomEndpoint))
 
             socket.on('user-connected', payload => {
-            // console.log("peerID:", peerID, "userID:", userID,"roomEndpoint:", roomEndpoint)
-            
-            
-                dispatch(addPeerAction(peerID, stream, userID, roomEndpoint))
-
-                socket.on('user-connected', payload => {
-                    // console.log("new user-connected => peerID: ", payload.peerID, "userID:", payload.userID, "roomEndpoint:", payload.roomEndpoint)
-                    // console.log("users in this room after new connection: ", chatRooms)
-
                     //we send the caller user info to who will answer it
                     const options = {metadata: {"userID": userID, "roomEndpoint": roomEndpoint}};
                     const call = peer.call(payload.peerID, stream, options)
@@ -271,15 +273,11 @@ const ChatRoom = (props) => {
                         //checking for prevent running the code twice.
                         if (id !== remoteStream.id) {
                             id = remoteStream.id
-                            // console.log("#################",payload.peerID, remoteStream, payload.userID)
                             dispatch(addPeerAction(payload.peerID, remoteStream, payload.userID, payload.roomEndpoint))
 
                             remoteVideoRef.current.srcObject = remoteStream
-                            // console.log("New peer get called and addPeerAction triggered! (the remote peer added)", payload.userID)
-
                         }
                     })
-                })
 
                 peer.on('call', call => {
                     call.answer(stream)
@@ -292,52 +290,42 @@ const ChatRoom = (props) => {
                             //we get the metadata sended from caller (call.metadata.userID)
                             dispatch(addPeerAction(call.peer, remoteStream, call.metadata.userID, call.metadata.roomEndpoint))
                             remoteVideoRef.current.srcObject = remoteStream
-                            // console.log("we answer the stream, addpeerAction triggered! (the owner of answer added)", call.metadata.userID, "xxxx")
                         }
                     })
                 })
 
-                remotePeerRef.current = peer
-
+                
                 socket.on('user-disconnected', payload => {
-                    // console.log("xxxxxxxxxx user disconnected xxxxxxxxx", payload.peerID)
 
                     dispatch(removePeerAction(payload.peerID, payload.userID))
-                    updateRoomUsersAction(payload.users, roomID, payload.userID).then((action) => dispatch(action))
-
-
-                })
-
+                    updateRoomUsersAction(payload.users, roomID, payload.userID).then((action) => dispatch(action))                
+                })  
                 socket.on("user-left", (payload) => {
-                    // console.log("USER-LEFT PAYLOAD => ", payload.users)
                     setUsersArray(payload.users)
                     dispatch(removePeerAction(payload.peerID, payload.userID))
                     updateRoomUsersAction(payload.users, roomID ,payload.userID).then((action) => dispatch(action))
                     remotePeerRef.current.destroy()
-                })
-
+                })                
                 socket.on("you-kicked", payload => {
                     if(payload.userID === userID){
                         dispatch(getIsKickedAction(true))
                         window.location.replace("/rooms?isKicked=true")
                     }
-                })
-
+                })             
+                remotePeerRef.current = peer;
+                return () => {
+                    socket.off("user-connected");
+                    socket.off("user-disconnected");
+                    socket.off("you-kicked");
+                    socket.emit("leave-room", { roomEndpoint, userID });
+                    peer.destroy();
+                    myStream?.getTracks()?.forEach(track => track.stop());
+                };
             })
         })
         .catch(err => console.log("Failed to get local stream", err))
 
-    }, [])
-    // useEffect(() => { 
-    //     console.log("peers =>", peers)
-    //     console.log("currentPeersReducer => ", currentPeersReducer)
-    // }, [currentPeersReducer])
-
-    useEffect(() => {
-        if(users) {
-            updateRoomUsersAction(users, roomID, userID).then((action) => dispatch(action))
-        }
-    }, [users])
+    }, [roomChecked, roomExists, roomID, userID])
 
 
     window.onpopstate = () => {
@@ -346,23 +334,15 @@ const ChatRoom = (props) => {
     }
 
     const leaveTheRoomHandler = () => {
-        const updatedUsers = users?.filter((user) => user !== userID)
-        dispatch(removePeerAction(myPeerId, userID))
-        updateRoomUsersAction(updatedUsers, roomID, userID).then((action) => dispatch(action))
+        socket.emit("leave-room", {
+            roomEndpoint,
+            userID
+        });
 
-        //disable the webcam and mic before leave
-        myStream.getTracks()
-        .forEach((track) => track.stop());
+        myStream?.getTracks().forEach(track => track.stop());
 
-    }
-
-    window.onbeforeunload = function(e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        // eslint-disable-next-line no-param-reassign
-        // e.returnValue = 'onbeforeunload';
-        leaveTheRoomHandler();
-      };
+        navigate("/rooms");
+    };
 
     const toggleCamHandler = () => {
         const videoTrack = myStream.getTracks().find(track => track.kind === 'video')
@@ -388,7 +368,6 @@ const ChatRoom = (props) => {
 
     const copyTheChatLink = () => {
         navigator.clipboard.writeText(`${process.env.REACT_APP_BE_DEV_URL}/chatroom/${roomEndpoint}`)
-        // toast("The link of the room copied!")
         toast('The link of the room copied!', {
             toastId: "copyLinkToast",
             position: "top-center",
@@ -447,6 +426,10 @@ const ChatRoom = (props) => {
         }
     }
 
+    if (!roomChecked) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <div className='d-flex flex-row chatRoom-div'>
 
@@ -494,11 +477,6 @@ const ChatRoom = (props) => {
                             <div className=' main-area position-relative' onClick={closeSidebar}>
                                 <div className='main-top d-flex align-items-center justify-content-between position-relative'>
                                     <div className='d-flex justify-content-center align-items-center'>
-
-
-
-                                        <div className='main-top-language me-3'>{roomData.language} - {roomData.level}</div>
-                                        {/* <div className='main-top-level'>{roomData.level}</div> */}
                                         <div className='main-top-host'>
                                             <div>host:</div>
                                             <div className='ms-1 main-top-creator'>{roomCreatorUsername}</div>
