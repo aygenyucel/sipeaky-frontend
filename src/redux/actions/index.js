@@ -16,6 +16,7 @@ export const REMOVE_ONLINE_USER = 'REMOVE_ONLINE_USER';
 export const RESET_ONLINE_USERS = 'RESET_ONLINE_USERS';
 export const GET_IS_KICKED = 'GET_IS_KICKED';
 export const RESET_PROFILE = 'RESET_PROFILE';
+export const UPDATE_CAMERA_STATE = 'UPDATE_CAMERA_STATE';
 
 const BE_DEV_URL = process.env.REACT_APP_BE_DEV_URL;
 
@@ -316,4 +317,11 @@ export const joinAsGuestAction = async () => {
     const profile = await profileResponse.json()
 
     return({ type: GET_PROFILE, payload: profile });
+}
+
+export const updateCameraState = (userID, isCameraOn) => {
+    return {
+        type: UPDATE_CAMERA_STATE,
+        payload: {userID, isCameraOn}
+    }
 }

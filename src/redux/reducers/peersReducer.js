@@ -1,5 +1,5 @@
 /* eslint-disable no-fallthrough */
-import { ADD_MESSAGE_TO_CHAT, ADD_PEER, REMOVE_PEER, RESET_PEERS_STATE } from '../actions/index.js';
+import { ADD_MESSAGE_TO_CHAT, ADD_PEER, REMOVE_PEER, RESET_PEERS_STATE, UPDATE_CAMERA_STATE } from '../actions/index.js';
 import { UPDATE_CHAT } from './../actions/index';
 
 const initialState = {
@@ -17,7 +17,7 @@ const peersReducer = (state = initialState, action) => {
                 if(index === -1) {
                     return {
                         ...state,
-                        peers: [...state.peers, {peerID: action.payload.peerID, stream: action.payload.stream, userID: action.payload.userID, roomEndpoint: action.payload.roomEndpoint}],
+                        peers: [...state.peers, {peerID: action.payload.peerID, stream: action.payload.stream, userID: action.payload.userID, roomEndpoint: action.payload.roomEndpoint, isCameraOn: false}],
                         users: [...state.users, {userID: action.payload.userID, roomEndpoint: action.payload.roomEndpoint}]
                     }
                 } else {
@@ -29,7 +29,7 @@ const peersReducer = (state = initialState, action) => {
             } else {
                 return {
                     ...state,
-                    peers: [{peerID: action.payload.peerID, stream: action.payload.stream, userID: action.payload.userID, roomEndpoint: action.payload.roomEndpoint}],
+                    peers: [{peerID: action.payload.peerID, stream: action.payload.stream, userID: action.payload.userID, roomEndpoint: action.payload.roomEndpoint, isCameraOn: false}],
                     users: [{userID: action.payload.userID, roomEndpoint: action.payload.roomEndpoint}]
                 }
             }
@@ -66,6 +66,15 @@ const peersReducer = (state = initialState, action) => {
                 peers: [],
                 users: [],
                 chat: []
+            }
+        case UPDATE_CAMERA_STATE:
+            return {
+                ...state,
+                peers: state.peers.map(peer =>
+                    peer.userID === action.payload.userID
+                        ? { ...peer, isCameraOn: action.payload.isCameraOn }
+                        : peer
+                )
             }
 
         default: 
