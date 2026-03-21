@@ -82,8 +82,9 @@ const ChatRoom = (props) => {
     //chat variables
     const [chatHistory, setChatHistory] = useState([]);
     const [text, setText] = useState("");
-
-    const [isChatOpen, setIsChatOpen] = useState(false)
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [roomExists, setRoomExists] = useState(false);
+    const [roomChecked, setRoomChecked] = useState(false);
     const [isSoundOn, setIsSoundOn] = useState(true)
 
     const resetFormValue = () => setText("");
@@ -346,6 +347,12 @@ const ChatRoom = (props) => {
         }
     }, [users])
 
+    useEffect(() => {
+        if (isMyCamOpen && myStream && myVideoRef.current) {
+            myVideoRef.current.srcObject = myStream;
+        }
+    }, [isMyCamOpen, myStream]);
+
 
     window.onpopstate = () => {
         //for make sure the user disconnect from the chat room
@@ -373,14 +380,36 @@ const ChatRoom = (props) => {
         })
     }
 
-    const toggleMicHandler = () => {
-        const audioTrack = myStream.getTracks().find(track => track.kind === 'audio')
-        if(audioTrack.enabled) {
-            audioTrack.enabled = false;
-            setIsMyMicOpen(false)
-        } else {
-            audioTrack.enabled = true;
-            setIsMyMicOpen(true)
+    const toggleMicHandler = async () => {
+        try {
+            if (!myStream) {
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: false,
+                    audio: true
+                });
+
+                setMyStream(stream);
+
+                const audioTrack = stream.getAudioTracks()[0];
+                audioTrack.enabled = true;
+
+                setIsMyMicOpen(true);
+                return;
+            }
+
+            const audioTrack = myStream?.getAudioTracks?.()[0];
+            if (!audioTrack) return;
+
+            audioTrack.enabled = !audioTrack.enabled;
+            setIsMyMicOpen(audioTrack.enabled);
+
+        } catch (err) {
+            if (err.name === "NotAllowedError") {
+                toast.error("Microphone is blocked. Allow access in your browser.");
+            } else {
+                toast.error("Unable to access microphone.");
+            }
         }
     }
 
@@ -640,7 +669,9 @@ const ChatRoom = (props) => {
                                         </div>
                                         <div className='video-area-footer d-flex justify-content-center align-items-center position-relative'>
                                             <div className="chat-btns mute-btn d-flex justify-content-center align-items-center"
-                                                title={isSoundOn ? "Mute sound" : "Unmute sound"} onClick={toggleSound}>
+                                                title={isSoundOn ? "Mute sound" : "Unmute sound"}
+                                                onClick={toggleSound}
+                                            >
                                                 {isSoundOn ? <VscUnmute/> : <VscMute/>}
                                             </div>
                                             <div className='chat-btns audio-btn d-flex justify-content-center align-items-center'>
@@ -654,7 +685,8 @@ const ChatRoom = (props) => {
                                                 </a>
                                             </div>
                                             <div className='chat-btns chat-btns camera-btn d-flex justify-content-center align-items-center'>
-                                                 {isMyCamOpen
+
+                                                {isMyCamOpen
                                                     ? <BsCameraVideo onClick={toggleCamHandler} title="Turn off camera"/>
                                                     : <BsCameraVideoOff onClick={toggleCamHandler} title="Turn on camera"/>}
                                             </div>

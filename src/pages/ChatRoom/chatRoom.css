@@ -286,6 +286,10 @@
     /* background-color: white; */
 }
 
+.creator-label.creator-placeholder{
+  border:2px solid #2b2b2b;
+}
+
 .chat-area {
     width: 400px;
     /* background-color: thistle; */
@@ -528,6 +532,14 @@
 
     .creator-label.creator-placeholder{
         border:2px solid #2b2b2b;
+    }
+
+   .video-player{
+        width:100%;
+        height:100%;
+        border-radius:14px;
+        overflow:hidden;
+        background:#000;
     }
 
    .video-player{
