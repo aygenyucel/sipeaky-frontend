@@ -11,7 +11,12 @@ import SearchRoom from '../../components/SearchRoom/SearchRoom.jsx';
 import CustomNavbar from "../../components/CustomNavbar/CustomNavbar";
 import { Modal } from 'react-bootstrap';
 import { Circles } from "react-loader-spinner";
+import { io } from "socket.io-client";
 
+const socket = io(process.env.REACT_APP_BE_DEV_URL, {
+        transports: ["websocket"]
+    });
+    
 const RoomsPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -28,6 +33,7 @@ const RoomsPage = () => {
 
     const [isKickedModalOpen, setIsKickedModalOpen] = useState(false)
     const [isRoomsLoading, setIsRoomsLoading] = useState(true)
+    
 
     const closeKickedModal = () => {
         if(isKickedModalOpen){
@@ -35,6 +41,21 @@ const RoomsPage = () => {
             navigate("/rooms")
         }
     }
+
+    useEffect(() => {
+        socket.on("room-users-updated", ({ roomID, users }) => {
+            setRoomsPaginated(prev =>
+                prev.map(room =>
+                    room._id === roomID
+                        ? { ...room, users }
+                        : room
+                )
+            );
+        });
+
+        return () => socket.off("room-users-updated");
+    }, []);
+
     useEffect(() => {
         const loadRooms = async () => {
             setIsRoomsLoading(true);
