@@ -179,9 +179,12 @@ const ChatRoom = (props) => {
                     }
 
                     //getting the username of room creator
-                    getUserInfo(data[0].creator).then(userData => {
-                        setRoomCreatorUsername(userData.username)
-                    })
+                    const creatorID = data[0].creator || data[0].creatorUserID;
+                    if (creatorID) {
+                        getUserInfo(creatorID).then(userData => {
+                            setRoomCreatorUsername(userData.username)
+                        })
+                    }
 
                     if(onlineChatUsers.findIndex(user => user === userID) !== -1){
                         alert("you are already in another room! please try again after leave current room")
