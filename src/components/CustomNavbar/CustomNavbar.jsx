@@ -6,7 +6,7 @@ import { getAllRoomsAction, logoutAction } from "../../redux/actions";
 import { isUserAlreadyLoggedInAction } from './../../redux/actions/index';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { GiHamburgerMenu } from "react-icons/gi";
+import { IoChevronDown } from "react-icons/io5";
 
 const CustomNavbar = () => {
   const location = useLocation();
@@ -15,7 +15,6 @@ const CustomNavbar = () => {
   const JWTToken = localStorage.getItem("JWTToken")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [pathname, setPathname] = useState("")
-  const [isActive, setIsActive] = useState(true)
   const user = useSelector(state => state.profileReducer.data)
 
 
@@ -36,11 +35,8 @@ const CustomNavbar = () => {
   }, [location])
 
   useEffect(() => {
-    // dispatch(resetPeersStateAction());
-    // dispatch(resetRoomsStateAction());
     getAllRoomsAction()
     .then((action) => dispatch(action))
-    // console.log("user", user, "jwt: ", JWTToken)
     isUserAlreadyLoggedInAction(user, JWTToken, dispatch)
     .then((boolean) => {
         if(boolean === true) {
@@ -52,16 +48,7 @@ const CustomNavbar = () => {
     .catch(err => console.log(err))
   }, [])
 
-  const [isNavbarOpen, setIsNavbarOpen] = useState(false)
-  const toggleNavbar = () => {
-    if(isNavbarOpen) {
-      setIsNavbarOpen(false)
-    } else {
-      setIsNavbarOpen(true)
-    }
-  }
-
-    return  <div className="navbar-div position-relative">
+   return  <div className="navbar-div position-relative">
               <Container className="d-flex justify-content-between">
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="navbar-left d-flex justify-content-center align-items-center">
@@ -96,18 +83,24 @@ const CustomNavbar = () => {
                 <div className="d-flex">
                 {isLoggedIn ? (
                     <>
-                      <div className="navbar-right user-info d-flex justify-content-center align-items-center">
+                      <div className="navbar-right user-info d-flex justify-content-center align-items-center user-menu-trigger" onClick={toggleUserMenu}>
                         <div className="d-flex justify-content-center align-items-center">{user.username}</div>
-                        <div onClick={toggleUserMenu} style={{ cursor: "pointer" }} className="user-avatar ms-3 d-flex justify-content-center align-items-center">
-                          <img src="/assets/avatar-default.png" alt="avatar-default" />
-                          {isUserMenuOpen && (
-                            <div className="user-dropdown">
-                              <div className="user-dropdown-item"  onClick={() => logoutUser()}>
-                                Sign out
-                              </div>
+                        <div className="user-avatar ms-2 d-flex align-items-center">
+                          <img src="/assets/avatar-default.png" alt="avatar" />
+                          <IoChevronDown className={`avatar-arrow ${isUserMenuOpen ? "open" : ""}`} />
+                        </div>
+                        {isUserMenuOpen && (
+                          <div className="user-dropdown">
+                            <a href="/" className="dropdown-item-mobile" ><div >Home</div></a>
+                            <a href="/rooms" className="dropdown-item-mobile"> <div >Chat rooms</div></a>
+                            <a href="#" className="dropdown-item-mobile"><div >Create a room</div></a>
+                            <a href="#" className="dropdown-item-mobile"><div>About Sipeaky</div></a>
+                            <div className="dropdown-divider"></div>
+                            <div className="user-dropdown-item" onClick={logoutUser}>
+                              Sign out
                             </div>
-                          )}
                           </div>
+                        )}
                       </div>
                     </>)
                   : 
@@ -118,24 +111,6 @@ const CustomNavbar = () => {
                     </div>
                   </a>
                   }
-                  <div className='navbar-burger position-relative' onClick={toggleNavbar}>
-                        <GiHamburgerMenu className="navbar-burger-icon"/>
-
-                        {isNavbarOpen ? <div className="navbar-toggle justify-content-center align-items-center">
-                          <div className="navbar-item d-flex justify-content-center">
-                            <a href="/" ><div >Home</div></a>
-                          </div>
-                          <div className="navbar-item d-flex justify-content-center">
-                            <a href="/rooms"> <div >Chat rooms</div></a>
-                          </div>
-                          <div className="navbar-item d-flex justify-content-center">
-                            <a href="#"><div >Create a room</div></a>
-                          </div>
-                          <div className="navbar-item d-flex justify-content-center">
-                            <a href="#"><div>About Sipeaky</div></a>
-                          </div>
-                      </div> : <></>}
-                  </div>
                 </div>
             </Container>
             </div>

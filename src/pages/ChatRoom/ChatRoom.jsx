@@ -159,7 +159,15 @@ const ChatRoom = (props) => {
         })
     }
 
-
+    const checkPermission = async (type) => {
+        try {
+            const result = await navigator.permissions.query({ name: type });
+            return result.state; 
+            // 'granted', 'denied', 'prompt'
+        } catch {
+            return "unknown";
+        }
+    };
     useEffect(() => {
         //checking if user logged in
         isUserAlreadyLoggedInAction(userData, JWTToken, dispatch)
@@ -371,24 +379,60 @@ const ChatRoom = (props) => {
 
     }
 
-    const toggleCamHandler = () => {
-        const videoTrack = myStream.getTracks().find(t => t.kind === 'video')
-        if (!videoTrack) return
-        videoTrack.enabled = !videoTrack.enabled
-        setIsMyCamOpen(videoTrack.enabled);
-        socket.emit("camera-toggled", {
-            userID,
-            roomEndpoint,
-            isCameraOn: videoTrack.enabled
-        })
+    const toggleCamHandler = async() => {
+        const permission = await checkPermission("camera");
+
+        if (permission === "denied") {
+            toast.error("We can’t access your camera. Please allow permissions from your browser settings.", {
+                toastId: "copyLinkToast",
+                position: "top-right",
+                autoClose: 4200,
+                hideProgressBar: false,
+                closeOnClick: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+            return;
+        }
+
+        try {
+            if (!myStream || !myStream.getVideoTracks().length) {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                setMyStream(stream);
+
+                const videoTrack = stream.getVideoTracks()[0];
+                videoTrack.enabled = true;
+
+                setIsMyCamOpen(true);
+            } else {
+                const videoTrack = myStream.getVideoTracks()[0];
+                videoTrack.enabled = !videoTrack.enabled;
+                setIsMyCamOpen(videoTrack.enabled);
+            }
+
+            socket.emit("camera-toggled", {
+                userID,
+                roomEndpoint,
+                isCameraOn: !isMyCamOpen
+            });
+
+        } catch (err) {
+            toast.error("Unable to access camera.");
+        }
     }
 
     const toggleMicHandler = async () => {
-        try {
-            if (!myStream) {
+        const permission = await checkPermission("microphone");
 
+        if (permission === "denied") {
+            toast.error("We can’t access your mic. Please allow permissions from your browser settings.");
+            return;
+        }
+
+        try {
+            if (!myStream || !myStream.getAudioTracks().length) {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: false,
                     audio: true
                 });
 
@@ -401,20 +445,14 @@ const ChatRoom = (props) => {
                 return;
             }
 
-            const audioTrack = myStream?.getAudioTracks?.()[0];
-            if (!audioTrack) return;
-
+            const audioTrack = myStream.getAudioTracks()[0];
             audioTrack.enabled = !audioTrack.enabled;
             setIsMyMicOpen(audioTrack.enabled);
 
         } catch (err) {
-            if (err.name === "NotAllowedError") {
-                toast.error("Microphone is blocked. Allow access in your browser.");
-            } else {
-                toast.error("Unable to access microphone.");
-            }
+            toast.error("Unable to access microphone.");
         }
-    }
+    };
 
     const copyTheChatLink = () => {
         navigator.clipboard.writeText(`${process.env.REACT_APP_BE_DEV_URL}/chatroom/${roomEndpoint}`)
@@ -507,26 +545,22 @@ const ChatRoom = (props) => {
                                         <HiHome/>
                                         </a>
                                     </div>
-                                    <div className='d-flex justify-content-center'>
+                                    {/* <div className='d-flex justify-content-center'>
                                         <HiVideoCamera/>
-                                    </div>
+                                    </div> */}
                                     <div className='d-flex justify-content-center'>
                                         <FaUserFriends/>
                                     </div>
-                                    <div>
+                                    {/* <div>
                                         <HiPlus/>
                                     </div>
                                     <div className='d-flex justify-content-center'>
                                         <MdSettings/>
-                                    </div>
+                                    </div> */}
                                 </div>
                                 <div className='left-btn d-flex justify-content-center flex-column'>
-                                    <div className="sidebar-user-avatar d-flex justify-content-center mb-3">
-                                        <img src="/assets/avatar-default.png" alt="avatar-default" />
-                                    </div>
-
                                     <div>
-                                    <a href='/rooms'>
+                                    <a href='/rooms' className="sidebar-exit">
                                         <RxPinLeft onClick={leaveTheRoomHandler}/>
                                     </a>
                                     </div>

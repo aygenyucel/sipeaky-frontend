@@ -31,24 +31,26 @@ const WelcomePage = () => {
     }, [])
     
     return (
-        <div className="welcome-page">
-            <Container  className="d-flex flex-column justify-content-center align-items-center"
-                style={{ height: "100vh" }}>
-                <h2 className="mb-4">Welcome to Sipeaky</h2>
-                <Button variant="outline-dark"
-                    className="mb-3 px-4"
-                    onClick={() => {handleGuestJoin()}}
-                    >
+        <div className="welcome-page d-flex flex-column justify-content-center align-items-center text-center">
+                <img
+                    src="/assets/welcome-page-card.png"
+                    alt="language speaking"
+                    className="welcome-image mb-4"
+                />
+
+                <Button
+                    className="mb-3 px-4 welcome-btn primary"
+                    onClick={handleGuestJoin}
+                >
                     Join as a guest
                 </Button>
 
-                <Button variant="dark"
-                    className="px-4"
-                    onClick={() => {handleCreateAccount()}}
-                    >
+                <Button
+                    className="px-4 welcome-btn secondary"
+                    onClick={handleCreateAccount}
+                >
                     Create an account
-                </Button>
-            </Container>
+                </Button>   
         </div>)
 }
 export default WelcomePage

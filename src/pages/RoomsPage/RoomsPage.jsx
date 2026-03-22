@@ -156,15 +156,11 @@ const RoomsPage = () => {
                          <Circles
                              type="Spinner Type"
                              visible={isRoomsLoading}
-                             color="#FF5959"
+                             color="#000000"
                              width={"50px"}
                          />
-                         <div className="mt-2" style={{color: "#FF5959", fontSize: "0.8rem"}}>Please wait, connecting to the backend may take some time..</div>
                      </div> 
                         :
-                        
-                                
-                               
                                  <> 
                                 {roomsPaginated?.map((room) => 
                                     <div key={room._id} className="m-2"> 
@@ -172,9 +168,6 @@ const RoomsPage = () => {
                                     </div>)
                                 } 
                                 </>
-                                
-                            
-                            
                         }
                         </div>
                         </div>

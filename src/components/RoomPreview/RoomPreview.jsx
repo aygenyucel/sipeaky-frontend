@@ -51,25 +51,6 @@ const RoomPreview = (props) => {
         });
     }, [roomData.creatorUserID]);
 
-    // DELETE ROOM (optional)
-    const deleteRoom = async (roomID) => {
-        try {
-            const response = await fetch(
-                `${process.env.REACT_APP_BE_DEV_URL}/rooms/${roomID}`,
-                { method: "DELETE" }
-            );
-
-            if (!response.ok) {
-                console.log("Delete failed");
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const deleteRoomHandler = () => {
-        deleteRoom(roomData._id);
-    };
 
     return (
         <>
@@ -107,9 +88,15 @@ const RoomPreview = (props) => {
                         />
                     ))}
                 </div>
-                <div onClick={joinTheRoom} className="room-join-div">
-                    Join the room
-                </div>
+                {users.length < roomCapacity ? (
+                    <div onClick={joinTheRoom} className="room-join-div">
+                        Join the room
+                    </div>
+                ) : (
+                    <div className="room-full-div">
+                        Room is full
+                    </div>
+                )}
             </div>
         </>
     );

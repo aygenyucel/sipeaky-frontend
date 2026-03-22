@@ -1,0 +1,66 @@
+<svg width="900" height="600" viewBox="0 0 900 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+<!-- Background -->
+<rect width="900" height="600" rx="24" fill="#EEF2FF"></rect>
+
+<!-- LEFT USER -->
+<g>
+  <rect x="100" y="120" width="260" height="180" rx="18" fill="#DDE5FF" stroke="#6366F1" stroke-width="2"></rect>
+  
+  <!-- avatar -->
+  <circle cx="230" cy="190" r="32" fill="#6366F1"></circle>
+  <rect x="200" y="225" width="60" height="35" rx="14" fill="#818CF8"></rect>
+
+  <!-- username -->
+  <text x="120" y="150" fill="#1f2340" font-size="14" font-family="Arial" font-weight="600">
+    Anna
+  </text>
+
+  <!-- mic icon -->
+  <circle cx="330" cy="150" r="10" fill="#10B981"></circle>
+</g>
+
+<!-- RIGHT USER -->
+<g>
+  <rect x="540" y="120" width="260" height="180" rx="18" fill="#DDE5FF"></rect>
+  
+  <circle cx="670" cy="190" r="32" fill="#8B5CF6"></circle>
+  <rect x="640" y="225" width="60" height="35" rx="14" fill="#A78BFA"></rect>
+
+  <text x="560" y="150" fill="#1f2340" font-size="14" font-family="Arial" font-weight="600">
+    Marco
+  </text>
+
+  <!-- muted mic -->
+  <circle cx="770" cy="150" r="10" fill="#EF4444"></circle>
+</g>
+
+<!-- CHAT PANEL -->
+<g>
+  <rect x="320" y="220" width="260" height="200" rx="16" fill="white" stroke="#C7D2FE"></rect>
+
+  <!-- header -->
+  <rect x="320" y="220" width="260" height="40" rx="16" fill="#EEF2FF"></rect>
+  <text x="340" y="245" fill="#6366F1" font-size="14" font-weight="600">
+    Study Chat
+  </text>
+
+  <!-- messages -->
+  <rect x="340" y="270" width="140" height="36" rx="12" fill="#6366F1"></rect>
+  <text x="350" y="293" fill="white" font-size="13">Hello!</text>
+
+  <rect x="380" y="315" width="160" height="36" rx="12" fill="#8B5CF6"></rect>
+  <text x="390" y="338" fill="white" font-size="13">Let’s practice 🇮🇹</text>
+
+  <rect x="340" y="360" width="130" height="36" rx="12" fill="#6366F1"></rect>
+  <text x="350" y="383" fill="white" font-size="13">Sure 👍</text>
+</g>
+
+<!-- CONNECTION LINES -->
+<path d="M360 260 C300 200, 250 200, 230 190" stroke="#6366F1" stroke-width="2" stroke-dasharray="5 5"></path>
+<path d="M580 260 C640 200, 690 200, 670 190" stroke="#8B5CF6" stroke-width="2" stroke-dasharray="5 5"></path>
+
+<!-- FLOATING DOTS -->
+<circle cx="180" cy="420" r="6" fill="#C7D2FE"></circle>
+<circle cx="720" cy="420" r="6" fill="#C7D2FE"></circle>
+</svg>

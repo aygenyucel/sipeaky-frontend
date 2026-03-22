@@ -56,8 +56,8 @@ const Home = () => {
                                 </div>
                                 
                             </div>
-                            <div className="col-6  main-right d-flex justify-content-start aling-items-end">
-                                <img className="home-img img-group-calling" src="/assets/group_video.svg" alt="group-calling" />
+                            <div className="col-6 image-card main-right d-flex justify-content-start aling-items-center">
+                                <img className="home-img img-global-greetings" src="/assets/global-greetings.png" alt="global-greetings" />
                             </div>
                         </div>
                     </Container>
@@ -83,7 +83,7 @@ const Home = () => {
                     <Container>
                         <div className="d-flex">
                             <div className="col-6 bottom-img-div d-flex justify-content-center">
-                                <img className="home-img bottom-img" src="/assets/world.svg" alt="around-the-world" />
+                                <img className="home-img bottom-img" src="/assets/practice-chat.svg" alt="practice" />
                             </div>
                             <div className="bottom-area col-6 d-flex flex-column justify-content-center  bottom-header">
                                 <div className="d-flex  bottom-header-2">
