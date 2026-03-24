@@ -22,7 +22,7 @@ const CreateCustomRoom = () => {
 
     const [capacity, setCapacity] = useState(2);
     const [language, setLanguage] = useState("English");
-    const [level, setLevel] = useState("B1");
+    const [level, setLevel] = useState("Beginner");
     const [userID, setUserID] = useState(null);
     const [endpoint] = useState("") //random room link created by UUID
 

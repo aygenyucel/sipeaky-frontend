@@ -3,22 +3,14 @@ import "./HomePage.css";
 import { useEffect, useState } from "react";
 import Typical from 'react-typical'
 import CustomNavbar from './../../components/CustomNavbar/CustomNavbar';
+import { allLanguages } from './../../data/languages';
 
 const Home = () => {
-
-    const [languages, setLanguages] = useState([
-        "English",4000,
-        "Spanish",4000,
-        "French",4000,
-        "German",4000,
-        "Italian",4000,
-        "Portuguese",4000,
-        "Turkish",4000
-    ]);
-    
+    const [languages, setLanguages] = useState([]);
     const [index, setIndex] = useState(0);
     
     useEffect(() => {
+        setLanguages(allLanguages)
         const timer = () => {
             const randomIndex = Math.floor(Math.random() * languages.length);
             setIndex(randomIndex)
@@ -43,7 +35,7 @@ const Home = () => {
                                     <div className="d-flex flex-column align-items-center">
                                         <div className="main-header">Find Your</div>
                                         <Typical
-                                            steps={languages}
+                                            steps={languages.flatMap(lang => [lang, 5000])}
                                             loop={Infinity}
                                             wrapper="span"
                                             className="main-header-language"

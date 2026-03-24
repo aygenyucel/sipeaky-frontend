@@ -10,7 +10,6 @@ import { VideoPlayer } from '../../components/VideoPlayer/VideoPlayer.jsx';
 import peersReducer from '../../redux/reducers/peersReducer';
 import { addPeerAction, getIsKickedAction, updateCameraState, updateRoomUsersAction } from '../../redux/actions';
 import { removePeerAction } from '../../redux/actions';
-import { useLocation } from 'react-router-dom';
 import {AiOutlineAudio, AiOutlineAudioMuted, AiFillCopy} from 'react-icons/ai'
 import {MdOutlineCallEnd} from 'react-icons/md'
 import {BsCameraVideoOff, BsCameraVideo, BsFillChatLeftDotsFill} from 'react-icons/bs'
@@ -24,12 +23,13 @@ import {VscMute, VscUnmute} from 'react-icons/vsc'
 import { useSelector } from 'react-redux';
 import { isUserAlreadyLoggedInAction } from './../../redux/actions/index';
 import { useNavigate } from 'react-router-dom';
-import {HiHome, HiVideoCamera, HiPlus} from 'react-icons/hi'
+import {HiHome} from 'react-icons/hi'
 import {FaUserFriends} from 'react-icons/fa'
-import {MdSettings} from 'react-icons/md'
 import { Form } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { topicsByLevel } from '../../data/topics.js';
+import Draggable from 'react-draggable';
 
 const socket = io(process.env.REACT_APP_BE_DEV_URL, {transports:["websocket"]})
 
@@ -83,9 +83,13 @@ const ChatRoom = (props) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [text, setText] = useState("");
     const [isChatOpen, setIsChatOpen] = useState(false);
-    const [roomExists, setRoomExists] = useState(false);
-    const [roomChecked, setRoomChecked] = useState(false);
-    const [isSoundOn, setIsSoundOn] = useState(true)
+    const [isSoundOn, setIsSoundOn] = useState(true);
+    const [topic, setTopic] = useState("");
+    const [questions, setQuestions] = useState([]);
+    const [isTopicOpen, setIsTopicBoxOpen] = useState(true);
+    const [isGeneratingTopic, setIsGeneratingTopic] = useState(false);
+    const topicBoxRef = useRef(null);
+    const topicButtonRef = useRef(null);
 
     const resetFormValue = () => setText("");
 
@@ -93,14 +97,16 @@ const ChatRoom = (props) => {
         event.preventDefault();
         resetFormValue();
     };
+    
     const onChangeHandler = (event) => {
         setText(event.target.value);
     };
+
     const onKeyDownHandler = (event) => {
         if (event.code === "Enter") {
-                if(/\S/.test(text)) {
-                    sendMessage();
-                }
+            if(/\S/.test(text)) {
+                sendMessage();
+            }
         }
     };
 
@@ -124,8 +130,8 @@ const ChatRoom = (props) => {
     const getMediaDevices = (mediaConstraints) => {
         return navigator.mediaDevices.getUserMedia(mediaConstraints)
     }
-    const mediaConstraints = {video: true, audio: true}
 
+    const mediaConstraints = {video: true, audio: true}
 
     const getUserInfo = (userID) => {
         return new Promise (async(resolve, reject) => {
@@ -159,7 +165,7 @@ const ChatRoom = (props) => {
         })
     }
 
-    const checkPermission = async (type) => {
+    const checkDevicePermissions = async (type) => {
         try {
             const result = await navigator.permissions.query({ name: type });
             return result.state; 
@@ -168,6 +174,32 @@ const ChatRoom = (props) => {
             return "unknown";
         }
     };
+
+    const generateTopic = () => {
+        if (isGeneratingTopic) return;
+        setIsGeneratingTopic(true);
+        setTimeout(() => {
+            if (!roomData?.level) return;
+
+            const levelTopics = topicsByLevel[roomData.language]?.[roomData.level];
+            if (!levelTopics || levelTopics.length === 0) return;
+
+            const random =
+                levelTopics[Math.floor(Math.random() * levelTopics.length)];
+
+            setTopic(random.topic);
+            setQuestions(random.questions);
+
+            setIsGeneratingTopic(false);
+        }, 1700);
+    };
+
+    useEffect(() => {
+        if(roomData?.level){
+            generateTopic(roomData.level);
+        }
+    }, [roomData]);
+    
     useEffect(() => {
         //checking if user logged in
         isUserAlreadyLoggedInAction(userData, JWTToken, dispatch)
@@ -380,7 +412,7 @@ const ChatRoom = (props) => {
     }
 
     const toggleCamHandler = async() => {
-        const permission = await checkPermission("camera");
+        const permission = await checkDevicePermissions("camera");
 
         if (permission === "denied") {
             toast.error("We can’t access your camera. Please allow permissions from your browser settings.", {
@@ -423,7 +455,7 @@ const ChatRoom = (props) => {
     }
 
     const toggleMicHandler = async () => {
-        const permission = await checkPermission("microphone");
+        const permission = await checkDevicePermissions("microphone");
 
         if (permission === "denied") {
             toast.error("We can’t access your mic. Please allow permissions from your browser settings.");
@@ -529,14 +561,56 @@ const ChatRoom = (props) => {
         return dst.stream
     }
 
+    const handleCloseTopicBox = () => {
+        const topicEl = topicBoxRef.current;
+        const iconEl = topicButtonRef.current;
+        if (!topicEl || !iconEl) return;
+        const topicRect = topicEl.getBoundingClientRect();
+        const iconRect = iconEl.getBoundingClientRect();
+        const dx = iconRect.left - topicRect.left;
+        const dy = iconRect.top - topicRect.top;
+        topicEl.style.transform = `
+            translate(${dx}px, ${dy}px) scale(0.2)
+        `;
+        topicEl.style.opacity = "0";
+        topicEl.style.transition = "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+        setTimeout(() => {
+            setIsTopicBoxOpen(false);
+        }, 400);
+    };
+
+    const handleOpenTopicBox = () => {
+        setIsTopicBoxOpen(true);
+        requestAnimationFrame(() => {
+            const topicEl = topicBoxRef.current;
+            const iconEl = topicButtonRef.current;
+
+            if (!topicEl || !iconEl) return;
+
+            const topicRect = topicEl.getBoundingClientRect();
+            const iconRect = iconEl.getBoundingClientRect();
+
+            const dx = iconRect.left - topicRect.left;
+            const dy = iconRect.top - topicRect.top;
+
+            topicEl.style.transform = `translate(${dx}px, ${dy}px) scale(0.2)`;
+            topicEl.style.opacity = "0";
+
+            topicEl.style.transition = "none";
+            requestAnimationFrame(() => {
+                topicEl.style.transition = "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+                topicEl.style.transform = "translate(0,0) scale(1)";
+                topicEl.style.opacity = "1";
+            });
+        });
+    };
+
     return (
         <div className='d-flex flex-row chatRoom-div'>
-
                             <div className='left-sidebar  flex-column justify-content-between align-items-center'>
                                 <div className="navbar-logo d-flex justify-content-center">
                                     <a href='/rooms'>
-                                    sipeaky
-
+                                        sipeaky
                                     </a>
                                 </div>
                                 <div className='sidebar-btns d-flex flex-column justify-content-center align-items-center'>
@@ -545,18 +619,18 @@ const ChatRoom = (props) => {
                                         <HiHome/>
                                         </a>
                                     </div>
-                                    {/* <div className='d-flex justify-content-center'>
-                                        <HiVideoCamera/>
-                                    </div> */}
                                     <div className='d-flex justify-content-center'>
                                         <FaUserFriends/>
                                     </div>
-                                    {/* <div>
-                                        <HiPlus/>
+                                    <div 
+                                        className="d-flex justify-content-center sidebar-topic-icon"
+                                        onClick={handleOpenTopicBox}
+                                    >
+                                        🧠
                                     </div>
-                                    <div className='d-flex justify-content-center'>
-                                        <MdSettings/>
-                                    </div> */}
+                                    <div ref={topicButtonRef} className="sidebar-tooltip">
+                                        Random Topics
+                                    </div>
                                 </div>
                                 <div className='left-btn d-flex justify-content-center flex-column'>
                                     <div>
@@ -585,21 +659,15 @@ const ChatRoom = (props) => {
 
                                     </div>
                                     <div className='d-flex justify-content-center align-items-center'>
-
                                         <div className='copy-link-div d-flex'>
                                             <div  onClick={copyTheChatLink} className='copy-link-text'>copy the chat link</div>
                                             <div onClick={copyTheChatLink} className="copy-link-btn-div">
-
                                                 <AiFillCopy  className="copy-link-btn"/>
                                             </div>
-                                            <ToastContainer
-
-                                                id= "copyLinkToast"/>
+                                            <ToastContainer id="copyLinkToast"/>
                                         </div>
 
                                         <div className='main-top-username'>{userData?.username}</div>
-
-
                                         {/* sidebar for the tablet and phones */}
                                         <div className='sidebar-burger' onClick={toggleSidebar}>
                                                 <GiHamburgerMenu/>
@@ -610,42 +678,68 @@ const ChatRoom = (props) => {
                                     <div className="navbar-logo d-flex justify-content-center">
                                         sipeaky
                                     </div>
-                                    <div className='sidebar-btns d-flex flex-column justify-content-center align-items-center'>
-                                        <div className='d-flex justify-content-center'>
+                                    <div className='sidebar-btns-mobile'>
+                                        <a href='/rooms' className='sidebar-item'>
                                             <HiHome/>
-                                        </div>
-                                        <div className='d-flex justify-content-center'>
-                                            <HiVideoCamera/>
-                                        </div>
-                                        <div className='d-flex justify-content-center'>
+                                            <span>Home</span>
+                                        </a>
+
+                                        <div className='sidebar-item'>
                                             <FaUserFriends/>
+                                            <span>People</span>
                                         </div>
-                                        <div>
-                                            <HiPlus/>
-                                        </div>
-                                        <div className='d-flex justify-content-center'>
-                                            <MdSettings/>
+
+                                        <div className='sidebar-item' onClick={handleOpenTopicBox}>
+                                            <span className="emoji">🧠</span>
+                                            <span>Topics</span>
                                         </div>
                                     </div>
+                                    <div className="sidebar-divider"></div>
                                     <div className='left-btn d-flex justify-content-center flex-column'>
-                                        <div className="sidebar-user-avatar d-flex justify-content-center mb-3">
-                                            <img src="/assets/avatar-default.png" alt="avatar-default" />
-                                        </div>
-
-                                        <div>
+                                        <div className='mt-3'>
                                             <RxPinLeft/>
                                         </div>
-
                                     </div>
 
                                 </div>
                                 <div className='main-bottom d-flex'>
                                     <div className='video-area d-flex flex-column justify-content-between'>
-                                        {/* <div className='video-area-header '>
-
-                                        </div> */}
                                         <div className='video-area-player'>
                                             <div className='video-area-player-frame d-flex flex-column align-items-center justify-content-center'>
+                                                {isTopicOpen && 
+                                                    <Draggable onStart={() => { if (topicBoxRef.current) { topicBoxRef.current.style.transition = "none";}}}
+                                                        onStop={() => { if (topicBoxRef.current) {topicBoxRef.current.style.transition = "";}}}
+                                                        cancel=".topic-close">
+                                                        <div ref={topicBoxRef} className="topic-box">
+                                                            <div className="topic-title d-flex">
+                                                                🎯 Practice Topic
+                                                            </div>
+                                                            <div className="topic-close" onClick={handleCloseTopicBox}>
+                                                                ✖
+                                                            </div>
+                                                            <div className="topic-text">
+                                                                {topic}
+                                                            </div>
+                                                            {questions.length > 0 && (
+                                                                <div className="topic-questions mt-2">
+                                                                    {questions.map((q, i) => (
+                                                                        <div key={i} className="topic-question">
+                                                                            {q}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            <div className='d-flex justify-content-end mt-1'>
+                                                                <div className={`topic-refresh-btn ${isGeneratingTopic ? "disabled" : ""}`} onPointerUp={generateTopic}>
+                                                                    <span className="refresh-text">
+                                                                        {isGeneratingTopic ? "Generating..." : "New"}
+                                                                    </span>
+                                                                    <span className="refresh-icon">🔄</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </Draggable>
+                                                }
                                                 <Container className='d-flex flex-column justify-content-center'>
                                                     <Row>
                                                         <Col sm={6} className="video-player-col position-relative">
