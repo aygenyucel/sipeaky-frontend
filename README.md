@@ -6,6 +6,12 @@ Create a room, share the link, and start studying together instantly.
 
 ---
 
+## 🔗 Related Repositories
+
+- Backend: https://github.com/aygenyucel/sipeaky-backend
+
+---
+
 ## 🚀 Live Demo
 
 https://sipeaky.vercel.app
