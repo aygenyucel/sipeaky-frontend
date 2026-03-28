@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import "./loginPage.css"
 import { Container } from 'react-bootstrap';
 import { Form } from 'react-bootstrap';
@@ -6,89 +7,119 @@ import { useEffect, useState } from "react";
 import { useLogin } from "../../hooks/useLogin";
 import { joinAsGuestAction } from "../../redux/actions";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const LoginPage = () => {
-    const [email, setEmail] = useState("")
+    const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingLogin, setIsLoadingLogin] = useState(false);
     const { loginUser, checkIfUserAlreadyLoggedIn } = useLogin()
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [isLoadingGuest, setIsLoadingGuest] = useState(false);
+    const location = useLocation();
+    const successMessage = location.state?.message;
 
     const submitLogin = async (e) => {
         e.preventDefault();
         setError(null);
-        setIsLoading(true);
+        setIsLoadingLogin(true);
 
         try {
-            await loginUser(email, password);
+            await Promise.all([
+                loginUser(username, password),
+                delay(800)
+            ]);
+
+            navigate("/home");
+
         } catch (error) {
             setError(error.message || "Login failed");
         } finally {
-            setIsLoading(false);
+            setIsLoadingLogin(false);
         }
-    }
-    useEffect(() => {
-        checkIfUserAlreadyLoggedIn();
-    }, [])
+    };
+
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
     const handleGuestJoin = async () => {
         try {
-            const action = await joinAsGuestAction();
-            dispatch(action);
+            setIsLoadingGuest(true);
+            await Promise.all([
+                joinAsGuestAction().then(action => dispatch(action)),
+                delay(800)
+            ]);
+
             navigate("/home");
+
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoadingGuest(false);
         }
     };
     
     return (
         <div className="login-page">
-            <Container>
-                <div className="d-flex justify-content-center">
-                <div className="d-flex flex-column login-div mt-5">
-                    <div className="mb-3 login-page-header">LOGIN</div>
+            <Container className="d-flex justify-content-center align-items-center h-100">
+                <div className="login-div">
+                    <div className="login-title">Welcome back</div>
+                    {successMessage && (
+                        <div className="login-success">
+                            {successMessage}
+                        </div>
+                    )}
                     <Form onSubmit={submitLogin}>
-                        <div className="d-flex flex-column ">
-                        <Form.Group className="mb-3 d-flex flex-column align-items-start " controlId="formBasicEmail">
-                            <Form.Label className="login-label" >Email address</Form.Label>
-                            <Form.Control type="email" placeholder="Enter email" onChange={(e) => setEmail(e.target.value)} />
+                        <Form.Group className="mb-3">
+                            <Form.Label className="login-label">Username</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter username"
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
                         </Form.Group>
-                        <Form.Group className="mb-3 d-flex flex-column align-items-start" controlId="formBasicPassword">
+                        <Form.Group className="mb-3">
                             <Form.Label className="login-label">Password</Form.Label>
-                            <Form.Control type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)}/>
+                            <Form.Control
+                                type="password"
+                                placeholder="Password"
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
                         </Form.Group>
-                        <Button variant="primary" type="submit" className="login-btn" disabled={isLoading}>
-                            {isLoading ? "Logging in..." : "Login"}
+                        <Button
+                            type="submit"
+                            className="login-btn primary"
+                            disabled={isLoadingLogin || isLoadingGuest}
+                            >
+                            {isLoadingLogin ? "Logging in..." : "Login"}
                         </Button>
                         {error && (
-                            <div className="login-error mt-3">
+                            <div className="login-error mt-2">
                                 {error}
                             </div>
                         )}
-                        <div className="d-flex justify-content-end mt-3 login-label">Not a member?<a href="/signup" className="ms-2 login-label-signup"> SIGNUP</a></div>
-                        </div>
                     </Form>
-                    <div className="text-center mt-4">
-                        <div className="d-flex align-items-center mb-3">
-                            <hr className="flex-grow-1" />
-                            <span className="mx-2 text-muted">or</span>
-                            <hr className="flex-grow-1" />
-                        </div>
 
-                        <button
-                            className="btn btn-outline-dark w-100"
-                            onClick={() => handleGuestJoin()}
-                        >
-                            Join as guest
-                        </button>
+                    <div className="divider">
+                        <span>or</span>
+                    </div>
+                    <Button
+                        className="login-btn secondary"
+                        onClick={handleGuestJoin}
+                        disabled={isLoadingGuest || isLoadingLogin}
+                    >
+                        {isLoadingGuest ? "Joining..." : "Join as guest"}
+                    </Button>
+                    <div className="login-footer">
+                        Not a member?
+                        <Link to="/signup" className="ms-2 login-signup-link">
+                            Sign up
+                        </Link>
                     </div>
                 </div>
-                </div>
             </Container>
-            
         </div>)
 }
 export default LoginPage

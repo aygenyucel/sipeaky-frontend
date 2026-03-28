@@ -12,18 +12,25 @@ const WelcomePage = () => {
     const dispatch = useDispatch();
 
     const {checkIfUserAlreadyLoggedIn} = useLogin();
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleCreateAccount = () => {
         navigate("/signup");
     };
     
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
     const handleGuestJoin = async () => {
         try {
-            const action = await joinAsGuestAction();
-            dispatch(action);
+            setIsLoading(true);
+            await Promise.all([
+                joinAsGuestAction().then(action => dispatch(action)),
+                delay(800)
+            ]);
             navigate("/home");
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
     useEffect(() => {
@@ -41,8 +48,9 @@ const WelcomePage = () => {
                 <Button
                     className="mb-3 px-4 welcome-btn primary"
                     onClick={handleGuestJoin}
+                    disabled={isLoading}
                 >
-                    Join as a guest
+                    {isLoading ? "Joining..." : "Join as guest"}
                 </Button>
 
                 <Button

@@ -103,33 +103,21 @@ export const resetOnlineUsersAction = () => {
         type: RESET_ONLINE_USERS
     }
 }
-export const signupAndGetTokenAction = (newUser) => {
-    return new Promise(async (resolve, reject) => {
-        const options = {
-            method: "POST",
-            body: JSON.stringify(newUser),
-            headers: {
-                "Content-Type": "application/json"
-            }
+export const signupAndGetTokenAction = async (newUser) => {
+    const options = {
+        method: "POST",
+        body: JSON.stringify(newUser),
+        headers: {
+            "Content-Type": "application/json"
         }
-            try {
-                const response = await fetch(`${BE_DEV_URL}/users/signup`, options);
-                if(response.ok) {
-                    const data= await response.json()
-                    resolve({})
-                } else {
-                    response.text()
-                    .then(text => {
-                        throw new Error(text)
-                    })
-                    console.log("Ops, something went wrong", )
-                }
-                
-            } catch (error) {
-                console.log("🚀 error", error)
-                reject(error)
-            }
-    })
+    }
+    const response = await fetch(`${BE_DEV_URL}/users/signup`, options);
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Something went wrong");
+    }
+    return await response.json();
 }
 
 export const logoutAction = () => {
@@ -148,7 +136,7 @@ export const loginAndGetTokenAction = async (user) => {
     })
     if(!loginResponse.ok){
         const errorData = await loginResponse.json();
-        throw new Error(errorData.message || "Invalid email or password");
+        throw new Error(errorData.message || "Invalid username or password");
     }
     
     const { JWTToken } = await loginResponse.json();

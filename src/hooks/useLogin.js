@@ -9,13 +9,12 @@ export const useLogin = () => {
     const JWTToken = localStorage.getItem("JWTToken")
     const userData = useSelector(state => state.profileReducer.data);   
 
-    const loginUser = async (email, password) => {
+    const loginUser = async (username, password) => {
         try {
-            const user = { email, password };
+            const user = { username, password };
             const { setUserProfileAction, setUserProfileIDAction } = await loginAndGetTokenAction(user);
             dispatch(setUserProfileAction);
             dispatch(setUserProfileIDAction);
-            navigate("/", {replace: true});
         } catch (error) {
             console.log(error);
             throw error; 

@@ -852,7 +852,7 @@ const ChatRoom = (props) => {
                                             <Form className="form d-flex justify-content-center align-items-center" onSubmit={onSubmitHandler}>
                                                 <Form.Group
                                                     className="form-group d-flex justify-content-center align-items-center"
-                                                    controlId="formBasicEmail"
+                                                    controlId="formBasicUsername"
                                                 >
                                                     <Form.Control
                                                         className="form-control chat-input"
@@ -899,7 +899,7 @@ const ChatRoom = (props) => {
                                             <Form className="form d-flex justify-content-center align-items-center" onSubmit={onSubmitHandler}>
                                                 <Form.Group
                                                     className="form-group d-flex justify-content-center align-items-center"
-                                                    controlId="formBasicEmail"
+                                                    controlId="formBasicUsername"
                                                 >
                                                     <Form.Control
                                                         className="form-control chat-input"
