@@ -1,37 +1,27 @@
 import "./searchRoom.css"
 import { Form } from 'react-bootstrap';
-import { Button } from 'react-bootstrap';
-import React, { useEffect, useState } from "react";
-import languages from 'languages-data';
-import Select from 'react-select';
+import React, { useState } from "react";
 import RoomPreview from './../RoomPreview/RoomPreview';
-import { useSelector } from 'react-redux';
 import {MdRefresh} from 'react-icons/md'
-
 
 const SearchRoom = () => {
     const [capacity, setCapacity] = useState(null);
     const [language, setLanguage] = useState(null);
     const [level, setLevel] = useState(null);
-    const [languageOptions, setLanguageOptions] = useState([])
-    const [searchedRooms, setSearchedRooms] = useState([])
-    const rooms = useSelector(state => state.roomsReducer.rooms);
+    const [searchedRooms, setSearchedRooms] = useState([]);
+    const languageOptions = [
+        { value: "English", label: "English" },
+        { value: "Spanish", label: "Spanish" },
+        { value: "French", label: "French" },
+        { value: "German", label: "German" },
+        { value: "Italian", label: "Italian" },
+        { value: "Portuguese", label: "Portuguese" },
+        { value: "Turkish", label: "Turkish" }
+    ]; 
 
     const onSubmitHandler = (e) => {
         e.preventDefault();
-        //TODO: search room function
     }
-
-    useEffect(() => {
-        // console.log(languagesData)
-        const languagesData = languages.getAllLanguages()
-        
-        setLanguageOptions(languagesData.map((language ) =>  {
-            return {value: language.name, label: language.name}}))
-        // console.log("xxx", languageOptions)
-    }, [])
-
-    
 
     const getSearchedRooms = async (capacity, language, level) => {
         let searchQuery = "";
@@ -52,9 +42,7 @@ const SearchRoom = () => {
 
             if(response.ok) {
                 const data = await response.json();
-                // console.log("searched rooms triggered!", data, searchQuery)
                 setSearchedRooms(data)
-                
             } else {
                 console.log("oopsss, something went wrong :/")
             }
@@ -108,22 +96,19 @@ const SearchRoom = () => {
                         <Form.Group className="me-2 d-flex flex-column form-group">
                             <div className="d-flex justify-content-start ms-1 mb-1">Room capacity</div>
                             <Form.Select defaultValue={'DEFAULT'}   id="roomCapacity" onChange={(e) => onChangeCapacityHandler(e)}>
-                                 <option value="DEFAULT" disabled>Select capacity</option>
-                                <option value= {2} >2</option>
-                                <option value={3}>3</option>
-                                <option value={4}>4</option>
+                                <option value="DEFAULT" disabled>Select capacity</option>
+                                <option value = {2}> 2 </option>
+                                <option value = {3}> 3 </option>
+                                <option value = {4}> 4 </option>
                             </Form.Select>
                         </Form.Group>
                         <Form.Group className="me-2 d-flex flex-column form-group">
                             <div className="d-flex justify-content-start ms-1 mb-1">My speaking level</div>
                             <Form.Select defaultValue={'DEFAULT'}  id="roomLevel" onChange={(e) => onChangeLevelHandler(e)}>
                                 <option value="DEFAULT" disabled>Select level</option>
-                                <option value="A1" >A1 - Beginner</option>
-                                <option value="A2" >A2 - Elementary</option>
-                                <option value="B1">B1 - Intermediate</option>
-                                <option value="B2">B2 - Upper Intermediate</option>
-                                <option value="C1">C1 - Advanced</option>
-                                <option value="C2">C2 - Proficiency</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
                                 <option value="Native">Native Speaker</option>
                             </Form.Select>
                             

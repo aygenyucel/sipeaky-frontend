@@ -1,8 +1,4 @@
 .roomspage {
-    background-color: var(--color-main);
-    border-bottom-left-radius: 30px;
-    border-bottom-right-radius: 30px;
-    padding-block: 30px;
     min-height: calc(100vh - 120px);
     padding: 50px;
     width: 100%;
@@ -54,6 +50,11 @@
     margin-top: 200px;
 }
 
+.rooms-pages {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 @media (max-width: 867px) {
     .rooms-pages {

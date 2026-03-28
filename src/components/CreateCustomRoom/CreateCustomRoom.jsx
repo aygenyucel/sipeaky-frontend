@@ -8,7 +8,6 @@ import { useDispatch } from 'react-redux';
 import { addNewRoomAction } from "../../redux/actions";
 import { v1 as uuid } from "uuid";
 import { useNavigate } from 'react-router-dom';
-import languages from 'languages-data';
 import Select from 'react-select';
 
 const CreateCustomRoom = () => {
@@ -23,74 +22,59 @@ const CreateCustomRoom = () => {
 
     const [capacity, setCapacity] = useState(2);
     const [language, setLanguage] = useState("English");
-    const [level, setLevel] = useState("B1");
+    const [level, setLevel] = useState("Beginner");
     const [userID, setUserID] = useState(null);
     const [endpoint] = useState("") //random room link created by UUID
 
-    const [languageOptions, setLanguageOptions] = useState("")
+    const languageOptions = [
+        { value: "English", label: "English" },
+        { value: "Spanish", label: "Spanish" },
+        { value: "French", label: "French" },
+        { value: "German", label: "German" },
+        { value: "Italian", label: "Italian" },
+        { value: "Portuguese", label: "Portuguese" },
+        { value: "Turkish", label: "Turkish" }
+    ];  
    
-
-
     const handleSubmit = (e) => {
         e.preventDefault()
-        
         createNewRoom()
         .then(({data, roomEndpoint, roomID}) => {
             dispatch(addNewRoomAction(data))
-            // console.log("ddddddd", data, roomEndpoint, roomID)
             navigate(`/chatroom/${roomEndpoint}`, {state: {user: userData, roomID: roomID}})
         })
         .catch((err) => {console.log(err)});
     }
 
 
-
-    //TODO: when user create a new room, update the user info and save the roomid inside that user object
-    
-    useEffect(() => {
-        // console.log(languagesData)
-        const languagesData = languages.getAllLanguages()
-        
-        setLanguageOptions(languagesData.map((language ) =>  {
-            return {value: language.name, label: language.name}}))
-        // console.log("xxx", languageOptions)
-    }, [])
-    const createNewRoom = () => {
-        return new Promise (async (resolve, reject) => {
-            const randomEndpoint = uuid()
-            const newRoom = {
-                capacity: capacity,
-                language: language,
-                level: level,
-                users:[],
-                creator: `${userID}`,
-                endpoint: randomEndpoint
-                
-            }
-            const options = {
-                method: "POST",
-                body: JSON.stringify(newRoom),
-                headers:{
-                    "Content-Type": "application/json"
-                }
-            }
+    const createNewRoom = async () => {
+        const randomEndpoint = uuid()
+        const newRoom = {
+            capacity: capacity,
+            language: language  ,
+            level: level,
+            users:[userID],
+            creatorUserID: `${userID}`,
+            hostUserID:`${userID}`,
+            endpoint: randomEndpoint,
+            roomStartedAt: new Date()
+        }
+        const response = await fetch(`${process.env.REACT_APP_BE_DEV_URL}/rooms`, {
             
-            try {
-                const response = await fetch(`${process.env.REACT_APP_BE_DEV_URL}/rooms`, options)
-                if(response.ok) {
-                    const data = await response.json();
-                    // console.log("new room data", data)
-                    const roomEndpoint = data.endpoint
-                    const roomID = data._id
-                    resolve({data, roomEndpoint, roomID})
-
-                } else {
-                    console.log("opssssss error fetching data")
-                }
-            } catch (error) {
-                console.log(error)
-                reject(error)
+            method: "POST",
+            body: JSON.stringify(newRoom),
+            headers:{
+                "Content-Type": "application/json"
             }
+        })
+        if (!response.ok) {
+            throw new Error("Failed to create room");
+        }
+        const data = await response.json();
+        return({
+            data,
+            roomEndpoint: data.endpoint,
+            roomID: data._id
         })
     }
 
@@ -100,25 +84,24 @@ const CreateCustomRoom = () => {
 
     const  handleChangeLanguage = (selectedLanguage) => {
         setLanguage(selectedLanguage.value)
-        // console.log("language selected: ", language)
       };
 
     return <>
             <div className="create-custom-room position-relative">
                 <button className=" create-room-btn"  onClick={handleShow}>
-                    Create Your Custom Room 
+                    Create Study Room 
                 </button>
 
                 <Modal show={show} onHide={handleClose} animation={true} className= "d-flex justify-content-center align-items-center">
                     <div className="modal-div">
                         <Modal.Header closeButton className="d-flex justify-content-center align-items-center">
-                            <Modal.Title className="modal-title" >CREATE YOUR CUSTOM ROOM</Modal.Title>
+                            <Modal.Title className="modal-title" >CREATE NEW ROOM</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             <Form onSubmit={handleSubmit}>
                                 <Form.Group className="mb-3 mt-2 create-room-form-group">
-                                    <Form.Label>Room capacity</Form.Label>
-                                    <Form.Select defaultValue={2}   id="roomCapacity" onChange={e => setCapacity(e.target.value)}>
+                                    <Form.Label>Capacity</Form.Label>
+                                    <Form.Select defaultValue={2} id="roomCapacity" onChange={(e) => setCapacity(e.target.value)}>
                                         <option value= {2} >2</option>
                                         <option value={3}>3</option>
                                         <option value={4}>4</option>
@@ -138,14 +121,10 @@ const CreateCustomRoom = () => {
                                 <Form.Group className="mb-3 create-room-form-group">
                                     
                                     <Form.Label>Language level</Form.Label>
-                                    <Form.Select placeholder="B1 - Intermediate"  defaultValue={'B1'}  id="roomLevel" onChange={e => setLevel(e.target.value)}>
-                                        {/* <option value="DEFAULT">Choose a language level</option> */}
-                                        <option value="A1" >A1 - Beginner</option>
-                                        <option value="A2" >A2 - Elementary</option>
-                                        <option value="B1">B1 - Intermediate</option>
-                                        <option value="B2">B2 - Upper Intermediate</option>
-                                        <option value="C1">C1 - Advanced</option>
-                                        <option value="C2">C2 - Proficiency</option>
+                                    <Form.Select placeholder="Beginner" defaultValue={'Beginner'} id="roomLevel" onChange={e => setLevel(e.target.value)}>
+                                        <option value="Beginner" >Beginner</option>
+                                        <option value="Intermediate">Intermediate</option>
+                                        <option value="Advanced">Advanced</option>
                                         <option value="Native">Native Speaker</option>
                                     </Form.Select>
                                 </Form.Group>

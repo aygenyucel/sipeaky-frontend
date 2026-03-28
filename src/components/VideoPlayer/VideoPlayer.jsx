@@ -5,41 +5,24 @@ import "./videoPlayer.css"
 import { useState } from 'react';
 
 export const VideoPlayer = (props) => {
-    const creatorUserName = props.creatorUserName
     const userID = props.userID
-    let videoRef = useRef({});
+    let videoRef = useRef(null);
     const [username, setUsername] = useState("")
 
     useEffect(() => {
+        if (!props.stream || !videoRef.current || !props.isCameraOn) return
+
         videoRef.current.srcObject = props.stream
-        // console.log("videPlayer triggered")
-        // console.log("cccc", props.stream.enabled)
 
-
-        //checking if the webcam of user open or not
-        const videoTrack = props.stream.getTracks().find(track => track.kind === 'video')
-        if(videoTrack.enabled) {
-            videoTrack.enabled = true;
-        } else {
-            videoTrack.enabled = false;
+        videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play().catch(err => console.log("video play error", err))
         }
-
-        const audioTrack = props.stream.getTracks().find(track => track.kind === 'audio')
-        if(audioTrack.enabled) {
-            audioTrack.enabled = true;
-        } else {
-            audioTrack.enabled = false;
-        }
-        //TODO: get the user info with userID
-
-        //TODO: get the media stream track information (screen sharing)
-
-        //every time we update peers State, stream will be changed
-    }, [props.stream])
+    }, [props.stream, props.isCameraOn])
 
     useEffect(() => {
+        if (!userID) return;
         getUserData(userID).then((userData) => setUsername(userData.username))
-    }, [])
+    }, [userID])
 
     const getUserData = (userID) => {
         return new Promise(async (resolve, reject) => {
@@ -56,16 +39,18 @@ export const VideoPlayer = (props) => {
         })
     }
 
-    return  <>  
-                <video ref={videoRef} autoPlay className='video'/>
-                <div className='video-username d-flex flex-column'>
-                    <div>
-                        {username} 
+    return  <>
+        {props.isCameraOn ? (
+            <video ref={videoRef} autoPlay className='video'/>
+            ) : (
+                <div className="video-placeholder">
+                    <div className="avatar-circle">
+                        {username?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="placeholder-name">
+                        {username}
                     </div>
                 </div>
-                {username === creatorUserName && <div className='creator-label-other'>
-                    host
-                </div>}
-                
-            </>
+            )}
+</>
 }
